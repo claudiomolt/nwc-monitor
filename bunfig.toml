@@ -1,2 +1,8 @@
 [install]
+# Configure package installation
 registry = "https://registry.npmjs.org/"
+cache = "~/.bun/install/cache"
+
+[run]
+# Bun runtime configuration
+silent = false

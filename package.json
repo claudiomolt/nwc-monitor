@@ -1,13 +1,41 @@
 {
   "name": "nwc-monitor",
   "version": "0.1.0",
-  "description": "Nostr Wallet Connect payment monitor with configurable actions",
+  "description": "Monitor NWC (Nostr Wallet Connect) payments with pluggable actions. Multi-wallet support, webhook, SQLite, email, and more.",
   "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "nwc-monitor": "./dist/index.js"
+  },
   "scripts": {
     "dev": "bun run src/index.ts",
-    "build": "bun build src/index.ts --outdir ./dist --target bun",
-    "start": "bun run dist/index.js"
+    "build": "bun build src/index.ts --outdir ./dist --target bun && chmod +x dist/index.js",
+    "start": "bun run dist/index.js",
+    "prepublishOnly": "bun run build"
   },
+  "keywords": [
+    "nostr",
+    "nwc",
+    "wallet-connect",
+    "lightning",
+    "bitcoin",
+    "payments",
+    "monitor",
+    "webhook",
+    "sqlite",
+    "multi-wallet",
+    "alby"
+  ],
+  "author": "Claudio Molt",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/claudiomolt/nwc-monitor"
+  },
+  "bugs": {
+    "url": "https://github.com/claudiomolt/nwc-monitor/issues"
+  },
+  "homepage": "https://github.com/claudiomolt/nwc-monitor#readme",
   "dependencies": {
     "@getalby/sdk": "^3.7.2",
     "yaml": "^2.6.1",
@@ -17,5 +45,9 @@
     "@types/node": "^22.10.2",
     "@types/nodemailer": "^6.4.17",
     "bun-types": "latest"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "bun": ">=1.0.0"
   }
 }

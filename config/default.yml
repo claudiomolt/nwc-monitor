@@ -1,81 +1,99 @@
 # NWC Monitor Configuration
+# Full example with multi-wallet support
 
-# Global monitor settings (applied to all wallets by default)
 monitor:
-  poll_interval: 5000       # Check for payments every 5 seconds
-  retry_delay: 10000        # Wait 10 seconds before retrying on error
-  max_retries: -1           # -1 = infinite retries
-  since_startup: true       # Only process payments received after service starts
+  # Delay between retries (milliseconds)
+  retry_delay: 10000
+  
+  # Maximum retry attempts (-1 for infinite)
+  max_retries: -1
+  
+  # Interval for sanity check polling (milliseconds)
+  sanity_check_interval: 60000
+  
+  # Start monitoring from service startup time
+  since_startup: true
+  
+  # Or specify a Unix timestamp to start from
+  # since_timestamp: 1234567890
 
-# Wallet configurations
-# Each wallet has its own independent action pipeline
+# Multiple wallets, each with independent actions
 wallets:
-  # Example wallet
-  - name: main
-    connection_file: "~/.alby-cli/connection-secret-claudio.key"
-    
-    # Actions to execute for each payment (in order)
+  # Personal wallet - basic console and SQLite logging
+  - name: personal
+    connection_file: "~/.alby-cli/connection-secret-personal.key"
     actions:
-      # Console logging
       - type: console
         enabled: true
-        format: "⚡ [{wallet}] {amount_sats} sats | {description} | {payment_hash}"
-
-      # File logging (JSONL format)
-      - type: file
-        enabled: true
-        path: "./data/payments.jsonl"
-        format: jsonl  # or csv
-
-      # SQLite database storage
+        template: "⚡ [{wallet}] {amount_sats} sats - {description}"
+      
       - type: sqlite
         enabled: true
-        database: "./data/payments.db"
-        table: payments
+        database: "./data/personal.db"
 
-      # Webhook (disabled by default)
-      # - type: webhook
-      #   enabled: true
-      #   url: "https://api.example.com/payment"
-      #   method: POST
-      #   headers:
-      #     Authorization: "Bearer YOUR_SECRET_TOKEN"
-      #   retry: 3
-      #   timeout: 5000
+  # Store wallet - webhook notifications and email
+  - name: store
+    connection_file: "~/.alby-cli/connection-secret-store.key"
+    monitor:
+      # Override sanity check interval for this wallet
+      sanity_check_interval: 30000
+    actions:
+      - type: webhook
+        enabled: true
+        url: "https://mystore.com/api/payment"
+        headers:
+          Authorization: "Bearer YOUR_SECRET_TOKEN"
+          X-Wallet: "store"
+        retry: 3
+        timeout: 5000
+      
+      - type: email
+        enabled: true
+        smtp:
+          host: smtp.gmail.com
+          port: 465
+          secure: true
+          user: "store@gmail.com"
+          pass: "your-app-password"
+        from: "Lightning Store <store@gmail.com>"
+        to: "owner@example.com"
+        subject_template: "⚡ Sale: {amount_sats} sats"
+        body_template: |
+          New payment received!
+          
+          Amount: {amount_sats} sats
+          Description: {description}
+          Type: {type}
+          Payment Hash: {payment_hash}
+          Time: {settled_at}
+      
+      - type: sqlite
+        enabled: true
+        database: "./data/store.db"
 
-      # OpenClaw agent integration (disabled by default)
-      # - type: session_send
-      #   enabled: true
-      #   gateway_url: "http://localhost:3000"
-      #   agent_id: "main"
-      #   message_template: "⚡ Payment received: {amount_sats} sats - {description}"
+  # Donations wallet - OpenClaw integration
+  - name: donations
+    connection_string: "nostr+walletconnect://..."
+    actions:
+      - type: console
+        enabled: true
+      
+      - type: session_send
+        enabled: true
+        gateway_url: "http://localhost:3000"
+        agent_id: "main"
+        message_template: "⚡ Donation: {amount_sats} sats - {description}"
+      
+      - type: file
+        enabled: true
+        path: "./data/donations.jsonl"
+        format: "jsonl"
 
-      # Email notifications (disabled by default)
-      # - type: email
-      #   enabled: true
-      #   smtp:
-      #     host: smtp.gmail.com
-      #     port: 465
-      #     secure: true
-      #     user: "your-email@gmail.com"
-      #     pass: "your-app-password"
-      #   from: "NWC Monitor <noreply@example.com>"
-      #   to: "recipient@example.com"
-      #   subject_template: "⚡ Payment: {amount_sats} sats"
-      #   body_template: |
-      #     Payment received on {wallet}:
-      #     - Amount: {amount_sats} sats
-      #     - Description: {description}
-      #     - Hash: {payment_hash}
-      #     - Time: {settled_at}
-
-# Template variables available in all actions:
-# {wallet}       - Wallet name
-# {amount_sats}  - Payment amount in satoshis
-# {description}  - Payment description/memo
-# {payment_hash} - Payment hash
-# {preimage}     - Payment preimage (if available)
-# {payer_pubkey} - Payer's public key (if available)
-# {settled_at}   - Settlement timestamp (ISO 8601)
-# {type}         - Payment type (invoice or keysend)
-# {id}           - Unique payment ID
+# Legacy single-wallet format (also supported):
+#
+# nwc:
+#   connection_file: "~/.alby-cli/connection-secret.key"
+#
+# actions:
+#   - type: console
+#     enabled: true
