@@ -1,3 +1,7 @@
+/**
+ * Webhook action - POST payment to HTTP endpoint
+ */
+
 import { BaseAction } from './base';
 import type { ActionConfig, ActionResult, Payment } from '../types';
 import { logger } from '../utils/logger';
@@ -14,7 +18,10 @@ export class WebhookAction extends BaseAction {
     this.timeout = (config.timeout as number) || 10000;
     this.retries = (config.retries as number) || 3;
     this.headers = (config.headers as Record<string, string>) || {};
-    if (!this.url) throw new Error('WebhookAction requires "url"');
+
+    if (!this.url) {
+      throw new Error('WebhookAction requires "url" config');
+    }
   }
 
   async execute(payment: Payment): Promise<ActionResult> {
@@ -22,22 +29,35 @@ export class WebhookAction extends BaseAction {
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
         const response = await fetch(this.url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...this.headers },
           body: JSON.stringify(payment),
           signal: controller.signal,
         });
+
         clearTimeout(timeoutId);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        logger.debug(`Webhook OK: ${this.url}`);
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        logger.debug(`Webhook delivered to ${this.url}`);
         return this.success({ status: response.status });
       } catch (error) {
-        if (attempt === this.retries) return this.failure(`Failed after ${this.retries + 1} attempts`);
-        logger.warn(`Webhook attempt ${attempt + 1} failed, retrying...`);
+        const isLastAttempt = attempt === this.retries;
+        const errorMsg = error instanceof Error ? error.message : String(error);
+
+        if (isLastAttempt) {
+          return this.failure(`Failed after ${this.retries + 1} attempts: ${errorMsg}`);
+        }
+
+        logger.warn(`Webhook attempt ${attempt + 1} failed: ${errorMsg}, retrying...`);
         await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 1000));
       }
     }
+
     return this.failure('Webhook failed');
   }
 }

@@ -1,64 +1,42 @@
-// Base action class for all action implementations
+/**
+ * Base action class with common functionality
+ */
 
 import type { Action, ActionConfig, ActionResult, Payment } from '../types';
+import { logger } from '../utils/logger';
 
 export abstract class BaseAction implements Action {
-  public name: string;
-  public enabled: boolean;
+  public readonly name: string;
   protected config: ActionConfig;
 
-  constructor() {
-    this.name = 'base';
-    this.enabled = true;
-    this.config = { type: 'base', enabled: true };
-  }
-
-  async init(config: ActionConfig): Promise<void> {
+  constructor(config: ActionConfig) {
     this.config = config;
-    this.enabled = config.enabled !== false;
+    this.name = config.type;
   }
 
   abstract execute(payment: Payment): Promise<ActionResult>;
 
-  async shutdown(): Promise<void> {
-    // Default: no cleanup needed
+  protected success(data?: unknown): ActionResult {
+    return { success: true, data };
   }
 
-  /**
-   * Apply template variables to a string
-   */
-  protected applyTemplate(template: string, payment: Payment): string {
+  protected failure(error: string): ActionResult {
+    logger.error(`Action ${this.name} failed:`, error);
+    return { success: false, error };
+  }
+
+  protected replaceTemplates(template: string, payment: Payment): string {
     return template
-      .replace(/{wallet}/g, payment.wallet)
-      .replace(/{amount_sats}/g, payment.amount_sats.toString())
-      .replace(/{description}/g, payment.description || '')
-      .replace(/{payment_hash}/g, payment.payment_hash)
-      .replace(/{preimage}/g, payment.preimage || '')
-      .replace(/{type}/g, payment.type)
-      .replace(/{settled_at}/g, new Date(payment.settled_at).toISOString())
-      .replace(/{id}/g, payment.id)
-      .replace(/{payer_pubkey}/g, payment.payer_pubkey || '');
-  }
-
-  /**
-   * Create a success result
-   */
-  protected success(data?: any): ActionResult {
-    return {
-      success: true,
-      action: this.name,
-      data,
-    };
-  }
-
-  /**
-   * Create an error result
-   */
-  protected failure(error: string | Error): ActionResult {
-    return {
-      success: false,
-      action: this.name,
-      error: error instanceof Error ? error.message : error,
-    };
+      .replace(/\{wallet\}/g, payment.wallet)
+      .replace(/\{amount_sats\}/g, payment.amount.toString())
+      .replace(/\{amount_btc\}/g, (payment.amount / 100_000_000).toFixed(8))
+      .replace(/\{description\}/g, payment.description)
+      .replace(/\{payment_hash\}/g, payment.payment_hash)
+      .replace(/\{invoice\}/g, payment.invoice)
+      .replace(/\{preimage\}/g, payment.preimage)
+      .replace(/\{type\}/g, payment.type)
+      .replace(/\{fees_paid\}/g, payment.fees_paid.toString())
+      .replace(/\{created_at\}/g, new Date(payment.created_at * 1000).toISOString())
+      .replace(/\{settled_at\}/g, new Date(payment.settled_at * 1000).toISOString());
   }
 }

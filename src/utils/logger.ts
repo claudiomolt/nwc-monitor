@@ -10,10 +10,10 @@ export enum LogLevel {
 }
 
 const COLORS = {
-  DEBUG: '\x1b[36m', // Cyan
-  INFO: '\x1b[32m',  // Green
-  WARN: '\x1b[33m',  // Yellow
-  ERROR: '\x1b[31m', // Red
+  DEBUG: '\x1b[36m',
+  INFO: '\x1b[32m',
+  WARN: '\x1b[33m',
+  ERROR: '\x1b[31m',
   RESET: '\x1b[0m',
 };
 
@@ -26,13 +26,9 @@ class Logger {
 
   private log(level: LogLevel, levelName: string, ...args: unknown[]): void {
     if (level < this.level) return;
-
     const timestamp = new Date().toISOString();
     const color = COLORS[levelName as keyof typeof COLORS] || '';
-    console.log(
-      `${color}[${timestamp}] ${levelName}${COLORS.RESET}`,
-      ...args
-    );
+    console.log(`${color}[${timestamp}] ${levelName}${COLORS.RESET}`, ...args);
   }
 
   debug(...args: unknown[]): void {

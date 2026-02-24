@@ -1,62 +1,53 @@
-// Core types for NWC payment monitor
+/**
+ * Core type definitions for NWC Monitor
+ */
 
 export interface Payment {
-  id: string;
   wallet: string;
-  type: 'invoice' | 'keysend' | 'incoming' | 'outgoing';
-  amount_sats: number;
-  description?: string;
+  type: string;
+  invoice: string;
+  description: string;
+  description_hash: string | null;
+  preimage: string;
   payment_hash: string;
-  preimage?: string;
-  payer_pubkey?: string;
+  amount: number;
+  fees_paid: number;
+  created_at: number;
+  expires_at: number | null;
   settled_at: number;
-  metadata?: Record<string, any>;
-}
-
-export interface ActionResult {
-  success: boolean;
-  action: string;
-  wallet?: string;
-  error?: string;
-  data?: any;
+  metadata: Record<string, unknown>;
 }
 
 export interface ActionConfig {
   type: string;
-  enabled: boolean;
-  [key: string]: any;
+  [key: string]: unknown;
+}
+
+export interface ActionResult {
+  success: boolean;
+  error?: string;
+  data?: unknown;
 }
 
 export interface Action {
   name: string;
-  enabled: boolean;
-  init(config: ActionConfig): Promise<void>;
   execute(payment: Payment): Promise<ActionResult>;
-  shutdown(): Promise<void>;
 }
 
 export interface WalletConfig {
   name: string;
-  connection_file?: string;
-  connection_string?: string;
+  nwc: string;
   actions: ActionConfig[];
-  monitor?: Partial<MonitorConfig>;
 }
 
 export interface MonitorConfig {
-  retry_delay: number;
-  max_retries: number;
-  sanity_check_interval: number;
-  since_startup: boolean;
-  since_timestamp?: number;
+  pollInterval: number;
+  limit: number;
 }
 
 export interface AppConfig {
-  wallets?: WalletConfig[];
-  nwc?: {
-    connection_file?: string;
-    connection_string?: string;
-  };
+  nwc?: string;
   actions?: ActionConfig[];
+  wallets?: WalletConfig[];
   monitor: MonitorConfig;
 }

@@ -27,6 +27,10 @@ OPTIONS:
   -V, --version         Show version
   -h, --help            Show this help
 
+ARCHITECTURE:
+  Primary: Nostr relay subscription (real-time push notifications)
+  Fallback: listTransactions polling (startup catch-up, reconnection, sanity checks)
+
 EXAMPLES:
   nwc-monitor
   nwc-monitor --config my-config.yml --verbose
@@ -42,7 +46,6 @@ function showVersion(): void {
 
 async function main(): Promise<void> {
   try {
-    // Parse CLI arguments
     const { values } = parseArgs({
       options: {
         config: { type: 'string', short: 'c', default: 'config/default.yml' },
@@ -63,12 +66,10 @@ async function main(): Promise<void> {
       process.exit(0);
     }
 
-    // Set log level
     if (values.verbose) {
       logger.setLevel(LogLevel.DEBUG);
     }
 
-    // Load config
     const configPath = resolve(values.config || 'config/default.yml');
     if (!existsSync(configPath)) {
       logger.error(`Config file not found: ${configPath}`);
@@ -78,32 +79,25 @@ async function main(): Promise<void> {
     logger.info(`Loading config from: ${configPath}`);
     const config = loadConfig(configPath);
 
-    // Normalize to multi-wallet format
     const wallets = normalizeConfig(config);
     logger.info(`Configured ${wallets.length} wallet(s)`);
 
-    // Build connection strings map
     const connectionStrings = new Map<string, string>();
     
-    // Legacy single-wallet
     if (config.nwc && !config.wallets) {
       connectionStrings.set('default', config.nwc);
     }
     
-    // Multi-wallet
     if (config.wallets) {
       for (const wallet of config.wallets) {
         connectionStrings.set(wallet.name, wallet.nwc);
       }
     }
 
-    // Register built-in actions
     registerBuiltinActions();
 
-    // Create and start monitor
     const monitor = new NWCMonitor(wallets, connectionStrings, config.monitor);
 
-    // Graceful shutdown
     const shutdown = () => {
       logger.info('Received shutdown signal, stopping monitor...');
       monitor.stop();
@@ -113,10 +107,9 @@ async function main(): Promise<void> {
     process.on('SIGINT', shutdown);
     process.on('SIGTERM', shutdown);
 
-    // Start monitoring
     await monitor.start();
 
-    logger.info('NWC Monitor running (relay subscription + fallback polling). Press Ctrl+C to stop.');
+    logger.info('NWC Monitor running (relay subscription + fallback). Press Ctrl+C to stop.');
   } catch (error) {
     logger.error('Fatal error:', error instanceof Error ? error.message : String(error));
     process.exit(1);
