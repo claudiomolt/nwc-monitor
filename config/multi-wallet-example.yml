@@ -1,0 +1,100 @@
+# Multi-Wallet NWC Monitor Configuration Example
+
+# Global settings (can be overridden per wallet)
+monitor:
+  poll_interval: 5000
+  retry_delay: 10000
+  max_retries: -1
+  since_startup: true
+
+# Multiple wallets, each with independent action pipelines
+wallets:
+  # Personal wallet - comprehensive logging
+  - name: personal
+    connection_file: "~/.alby-cli/personal.key"
+    actions:
+      - type: console
+        enabled: true
+        format: "💰 [{wallet}] {amount_sats} sats | {description}"
+      
+      - type: file
+        enabled: true
+        path: "./data/personal-payments.jsonl"
+        format: jsonl
+      
+      - type: sqlite
+        enabled: true
+        database: "./data/personal-payments.db"
+        table: payments
+
+  # Business wallet - webhook + email alerts
+  - name: business
+    connection_file: "~/.alby-cli/business.key"
+    
+    # Override: check more frequently for this wallet
+    monitor:
+      poll_interval: 3000
+    
+    actions:
+      - type: console
+        enabled: true
+        format: "💼 [{wallet}] {amount_sats} sats - {description}"
+      
+      - type: webhook
+        enabled: true
+        url: "https://api.mybusiness.com/payment-received"
+        method: POST
+        headers:
+          Authorization: "Bearer YOUR_SECRET_TOKEN"
+          X-Wallet-ID: "business"
+        retry: 3
+        timeout: 5000
+      
+      - type: email
+        enabled: true
+        smtp:
+          host: smtp.gmail.com
+          port: 465
+          secure: true
+          user: "accounting@mybusiness.com"
+          pass: "your-app-password"
+        from: "NWC Monitor <noreply@mybusiness.com>"
+        to: "accounting@mybusiness.com"
+        subject_template: "💼 Payment Received: {amount_sats} sats"
+        body_template: |
+          Payment received on business wallet:
+          
+          Amount: {amount_sats} sats
+          Description: {description}
+          Payment Hash: {payment_hash}
+          Settled: {settled_at}
+          Type: {type}
+
+  # Store wallet - webhook only
+  - name: store
+    connection_file: "~/.alby-cli/store.key"
+    actions:
+      - type: console
+        enabled: true
+        format: "🛒 [{wallet}] Sale: {amount_sats} sats"
+      
+      - type: webhook
+        enabled: true
+        url: "https://mystore.com/api/payment-webhook"
+        method: POST
+        retry: 5
+      
+      - type: sqlite
+        enabled: true
+        database: "./data/store-sales.db"
+        table: sales
+
+  # Development wallet - using connection string instead of file
+  - name: dev
+    connection_string: "nostr+walletconnect://..."
+    monitor:
+      poll_interval: 10000  # Check less frequently
+    actions:
+      - type: console
+        enabled: true
+        format: "🧪 [{wallet}] {amount_sats} sats"

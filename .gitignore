@@ -1,0 +1,15 @@
+node_modules/
+dist/
+data/
+*.db
+*.db-journal
+*.log
+.env
+.env.local
+config/production.yml
+config/*.key
+*.key
+.DS_Store
+bun.lock
+bun.lockb
+memory/
