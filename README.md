@@ -1,189 +1,194 @@
-# NWC Monitor
+# ⚡ NWC Monitor
 
-[![npm version](https://img.shields.io/npm/v/nwc-monitor.svg)](https://www.npmjs.com/package/nwc-monitor)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
-[![Bun](https://img.shields.io/badge/Bun-1.0-orange.svg)](https://bun.sh)
+[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Bun Runtime](https://img.shields.io/badge/runtime-Bun-orange.svg)](https://bun.sh)
+[![TypeScript](https://img.shields.io/badge/language-TypeScript-blue.svg)](https://www.typescriptlang.org/)
+[![Bitcoin](https://img.shields.io/badge/bitcoin-lightning-yellow.svg)](https://lightning.network/)
 
-**Monitor incoming Lightning payments from multiple NWC (Nostr Wallet Connect) wallets with configurable action pipelines.**
-
-Built with Bun + TypeScript. Zero-dependency SQLite storage. Pluggable action system. Production-ready.
+Monitor incoming Bitcoin Lightning payments via NWC (Nostr Wallet Connect) with pluggable actions. Built for speed, reliability, and multi-wallet support.
 
 ## ✨ Features
 
-- 🔌 **Multi-Wallet Support** - Monitor multiple NWC wallets in parallel
-- ⚡ **Real-time Monitoring** - Detect incoming invoices and keysends
-- 🔧 **Pluggable Actions** - 6 built-in actions + extensible system
-- 💾 **SQLite Storage** - Fast, zero-dependency database (Bun native)
-- 📝 **File Logging** - Export to JSONL or CSV
-- 🪝 **Webhooks** - POST payment data with retry logic
-- 📧 **Email Notifications** - SMTP support with templates
-- 🤖 **Agent Integration** - Send to OpenClaw agent sessions
-- 🔄 **Auto-reconnect** - Graceful error handling and retry
-- 🛡️ **Deduplication** - Prevents duplicate payment processing
-- 🎛️ **Per-Wallet Config** - Override settings per wallet
-- 📦 **npm Package** - Install globally or use with `npx`
-
-## 📦 Installation
-
-### Global Install
-
-```bash
-npm install -g nwc-monitor
-```
-
-### npx (No Install)
-
-```bash
-npx nwc-monitor --config config.yml
-```
-
-### Local Development
-
-```bash
-git clone https://github.com/claudiomolt/nwc-monitor
-cd nwc-monitor
-bun install
-bun run build
-```
+- **🔔 Subscription-First Architecture** — Real-time payment detection via Nostr relay subscription (zero polling overhead)
+- **🔄 Smart Fallback** — Polling only for startup catch-up, reconnection recovery, and periodic sanity checks
+- **👥 Multi-Wallet Support** — Monitor multiple wallets simultaneously, each with independent action pipelines
+- **🔌 Pluggable Actions** — Easily add custom actions (webhook, SQLite, email, console, file, OpenClaw integration)
+- **🛡️ Deduplication** — Prevents duplicate payment processing
+- **🔁 Auto-Reconnect** — Handles relay disconnections gracefully with automatic gap filling
+- **⚡ Lightning Fast** — Built on Bun for maximum performance
+- **🎯 TypeScript Strict** — Type-safe with full IntelliSense support
 
 ## 🚀 Quick Start
 
-1. **Create a config file** (`config.yml`):
-
-```yaml
-monitor:
-  poll_interval: 5000
-
-wallets:
-  - name: main
-    connection_file: "~/.alby-cli/connection-secret.key"
-    actions:
-      - type: console
-      - type: sqlite
-        database: "./data/payments.db"
-```
-
-2. **Run the monitor**:
+### Installation
 
 ```bash
-nwc-monitor --config config.yml
+# Clone the repository
+git clone https://github.com/claudiomolt/nwc-monitor.git
+cd nwc-monitor
+
+# Install dependencies
+bun install
+
+# Copy example config
+cp config/default.yml config/local.yml
+
+# Edit config with your NWC connection
+nano config/local.yml
+
+# Run the monitor
+bun run start --config config/local.yml
 ```
 
-3. **Send a Lightning payment** to your wallet and watch it appear in the console!
+### Or install globally
 
-## ⚙️ Configuration
+```bash
+# Install as global command
+bun install -g nwc-monitor
 
-### Basic Configuration
-
-```yaml
-# Global monitor settings
-monitor:
-  poll_interval: 5000       # Check every 5 seconds
-  retry_delay: 10000        # Retry after 10 seconds on error
-  max_retries: -1           # Infinite retries
-  since_startup: true       # Only process new payments
-
-# Single wallet
-wallets:
-  - name: my-wallet
-    connection_file: "~/.alby-cli/connection-secret.key"
-    actions:
-      - type: console
-        format: "⚡ {amount_sats} sats | {description}"
+# Run from anywhere
+nwc-monitor --config ~/my-config.yml
 ```
 
-### Multi-Wallet Configuration
+## 📋 Configuration
 
-Each wallet runs independently with its own action pipeline:
+### Multi-Wallet Format (Recommended)
 
 ```yaml
 monitor:
-  poll_interval: 5000
+  retry_delay: 10000              # Retry delay in milliseconds
+  max_retries: -1                 # -1 for infinite retries
+  sanity_check_interval: 60000    # Polling fallback interval (60s)
+  since_startup: true             # Start from current time
 
 wallets:
-  # Personal wallet
   - name: personal
-    connection_file: "~/.alby-cli/personal.key"
+    connection_file: "~/.alby-cli/connection-secret-personal.key"
     actions:
       - type: console
-        format: "💰 [{wallet}] {amount_sats} sats - {description}"
+        enabled: true
       - type: sqlite
+        enabled: true
         database: "./data/personal.db"
 
-  # Business wallet (check more frequently)
-  - name: business
-    connection_file: "~/.alby-cli/business.key"
-    monitor:
-      poll_interval: 3000
-    actions:
-      - type: webhook
-        url: "https://api.mybusiness.com/payment"
-        headers:
-          Authorization: "Bearer SECRET"
-      - type: email
-        to: "accounting@mybusiness.com"
-
-  # Store wallet
   - name: store
     connection_string: "nostr+walletconnect://..."
+    monitor:
+      sanity_check_interval: 30000  # Override per wallet
     actions:
       - type: webhook
-        url: "https://mystore.com/api/payment-received"
+        enabled: true
+        url: "https://mystore.com/api/payment"
+        headers:
+          Authorization: "Bearer TOKEN"
+        retry: 3
+        timeout: 5000
 ```
 
-## 🔌 Built-in Actions
+### Legacy Single-Wallet Format
 
-### Console
+```yaml
+nwc:
+  connection_file: "~/.alby-cli/connection-secret.key"
 
-Log payments to stdout with customizable format.
+monitor:
+  retry_delay: 10000
+  max_retries: -1
+  sanity_check_interval: 60000
+  since_startup: true
+
+actions:
+  - type: console
+    enabled: true
+  - type: sqlite
+    enabled: true
+    database: "./data/payments.db"
+```
+
+## 🎯 Built-in Actions
+
+### 1. Console
+
+Log payments to stdout with customizable templates.
 
 ```yaml
 - type: console
   enabled: true
-  format: "⚡ [{wallet}] {amount_sats} sats | {description} | {payment_hash}"
+  template: "⚡ [{wallet}] {amount_sats} sats - {description}"
 ```
 
-### File
+### 2. SQLite
 
-Append payments to a file (JSONL or CSV).
-
-```yaml
-- type: file
-  enabled: true
-  path: "./data/payments.jsonl"
-  format: jsonl  # or csv
-```
-
-### SQLite
-
-Store payments in SQLite database.
+Store payments in a local SQLite database.
 
 ```yaml
 - type: sqlite
   enabled: true
   database: "./data/payments.db"
-  table: payments
 ```
 
-### Webhook
+**Schema:**
+```sql
+CREATE TABLE payments (
+  id TEXT PRIMARY KEY,
+  wallet TEXT NOT NULL,
+  type TEXT NOT NULL,
+  amount_sats INTEGER NOT NULL,
+  description TEXT,
+  payment_hash TEXT NOT NULL,
+  preimage TEXT,
+  payer_pubkey TEXT,
+  settled_at INTEGER NOT NULL,
+  metadata TEXT,
+  created_at INTEGER NOT NULL
+);
+```
 
-POST payment data to a URL with retry logic.
+### 3. File
+
+Append payments to JSONL or CSV file.
+
+```yaml
+- type: file
+  enabled: true
+  path: "./data/payments.jsonl"
+  format: "jsonl"  # or "csv"
+```
+
+### 4. Webhook
+
+HTTP POST to external API with retry and timeout.
 
 ```yaml
 - type: webhook
   enabled: true
-  url: "https://api.example.com/payment"
-  method: POST
+  url: "https://example.com/api/payment"
   headers:
-    Authorization: "Bearer YOUR_TOKEN"
+    Authorization: "Bearer TOKEN"
+    X-Custom-Header: "value"
   retry: 3
   timeout: 5000
 ```
 
-### Email
+**Payload:**
+```json
+{
+  "id": "hash_timestamp",
+  "wallet": "store",
+  "type": "invoice",
+  "amount_sats": 1000,
+  "description": "Order #123",
+  "payment_hash": "abc123...",
+  "preimage": "def456...",
+  "payer_pubkey": "npub...",
+  "settled_at": "2026-02-24T19:30:00.000Z",
+  "metadata": {}
+}
+```
 
-Send email notifications via SMTP.
+### 5. Email
+
+Send payment notifications via SMTP.
 
 ```yaml
 - type: email
@@ -192,274 +197,240 @@ Send email notifications via SMTP.
     host: smtp.gmail.com
     port: 465
     secure: true
-    user: "you@gmail.com"
+    user: "your-email@gmail.com"
     pass: "app-password"
-  from: "NWC Monitor <noreply@example.com>"
-  to: "recipient@example.com"
+  from: "Store <store@example.com>"
+  to: "owner@example.com"
   subject_template: "⚡ Payment: {amount_sats} sats"
   body_template: |
-    Payment received on {wallet}:
+    New payment received!
+    
     Amount: {amount_sats} sats
     Description: {description}
-    Hash: {payment_hash}
+    Payment Hash: {payment_hash}
 ```
 
-### Session Send
+### 6. Session Send (OpenClaw Integration)
 
-Send notifications to OpenClaw agent sessions.
+Notify OpenClaw agent via HTTP.
 
 ```yaml
 - type: session_send
   enabled: true
   gateway_url: "http://localhost:3000"
   agent_id: "main"
-  message_template: "⚡ Payment received: {amount_sats} sats"
+  message_template: "⚡ Payment: {amount_sats} sats - {description}"
 ```
 
-## 📝 Template Variables
+## 🎨 Template Variables
 
-All actions support these template variables:
+All action templates support these variables:
 
-| Variable | Description |
-|----------|-------------|
-| `{wallet}` | Wallet name |
-| `{amount_sats}` | Amount in satoshis |
-| `{description}` | Payment description/memo |
-| `{payment_hash}` | Payment hash |
-| `{preimage}` | Payment preimage (if available) |
-| `{payer_pubkey}` | Payer's public key (if available) |
-| `{settled_at}` | Settlement timestamp (ISO 8601) |
-| `{type}` | Payment type (`invoice` or `keysend`) |
-| `{id}` | Unique payment ID |
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `{wallet}` | Wallet name | `personal` |
+| `{amount_sats}` | Amount in satoshis | `1000` |
+| `{description}` | Payment description | `Order #123` |
+| `{payment_hash}` | Lightning payment hash | `abc123...` |
+| `{preimage}` | Payment preimage | `def456...` |
+| `{type}` | Payment type | `invoice` or `keysend` |
+| `{settled_at}` | Settlement timestamp (ISO) | `2026-02-24T19:30:00.000Z` |
+| `{id}` | Unique payment ID | `hash_timestamp` |
+| `{payer_pubkey}` | Payer's Nostr pubkey | `npub...` |
 
-## 🏗️ Architecture
+## 🔧 CLI Options
 
-```
-┌─────────────────┐
-│   NWC Monitor   │ (Orchestrator)
-└────────┬────────┘
-         │
-    ┌────┴────┬────────┬────────┐
-    │         │        │        │
-┌───▼───┐ ┌──▼───┐ ┌──▼───┐ ┌──▼───┐
-│Wallet1│ │Wallet2│ │Wallet3│ │Wallet N│
-└───┬───┘ └──┬───┘ └──┬───┘ └──┬───┘
-    │        │        │        │
-┌───▼───────────────────────────▼───┐
-│   Action Pipelines (per wallet)   │
-│   [console, sqlite, webhook, ...]  │
-└────────────────────────────────────┘
+```bash
+nwc-monitor [OPTIONS]
+
+OPTIONS:
+  -c, --config <path>    Path to YAML config file (default: ./config/default.yml)
+  --verbose              Enable verbose debug logging
+  -v, --version          Show version
+  -h, --help             Show help
 ```
 
-Each wallet:
-- Connects to its own Nostr relay
-- Has an independent action pipeline
-- Can override global monitor settings
-- Processes payments in parallel
+**Examples:**
+```bash
+# Use default config
+nwc-monitor
 
-## 🔧 Custom Actions
+# Use custom config
+nwc-monitor --config ~/my-config.yml
 
-Create custom actions by extending the `BaseAction` class:
+# Enable verbose logging
+nwc-monitor --verbose
+```
+
+## 🔌 Creating Custom Actions
+
+### 1. Implement the Action Interface
 
 ```typescript
-// src/actions/my-action.ts
-import { BaseAction } from './base';
-import type { Payment, ActionResult } from '../types';
+import { BaseAction } from './actions/base';
+import type { ActionResult, Payment } from './types';
 
-export class MyAction extends BaseAction {
-  name = 'my_action';
-  private apiKey: string = '';
+export class MyCustomAction extends BaseAction {
+  constructor() {
+    super('my_custom_action');
+  }
 
   async init(config: any): Promise<void> {
     await super.init(config);
-    this.apiKey = config.api_key;
+    // Initialize your action (database, API clients, etc.)
   }
 
   async execute(payment: Payment): Promise<ActionResult> {
-    console.log(`Processing ${payment.wallet}: ${payment.amount_sats} sats`);
-    // Your custom logic here
-    return this.success({ processed: true });
+    try {
+      // Do something with the payment
+      console.log(`Custom action: ${payment.amount_sats} sats`);
+      
+      return this.success({ processed: true });
+    } catch (error) {
+      return this.failure(error as Error);
+    }
+  }
+
+  async shutdown(): Promise<void> {
+    // Cleanup resources
   }
 }
 ```
 
-Register in `src/actions/index.ts`:
+### 2. Register the Action
 
 ```typescript
-import { MyAction } from './my-action';
+// In src/actions/index.ts
+import { MyCustomAction } from './my-custom-action';
 
-function registerBuiltinActions() {
-  // ... existing actions
-  actionRegistry.set('my_action', MyAction);
-}
+registry.register('my_custom_action', MyCustomAction);
 ```
 
-Use in config:
+### 3. Use in Config
 
 ```yaml
 actions:
-  - type: my_action
+  - type: my_custom_action
     enabled: true
-    api_key: "secret"
+    custom_option: "value"
 ```
 
-## 🐳 Deployment
+## 🔗 Compatibility
 
-### systemd
+Works with any NWC-compatible wallet:
 
-```ini
-[Unit]
-Description=NWC Payment Monitor
-After=network.target
+- ✅ **Alby Hub** (self-hosted)
+- ✅ **Alby Extension** (browser)
+- ✅ **lncurl.lol** (Nostr-native wallet)
+- ✅ **Primal Wallet**
+- ✅ Any wallet supporting **NIP-47** (Nostr Wallet Connect)
 
-[Service]
-Type=simple
-User=youruser
-WorkingDirectory=/path/to/nwc-monitor
-ExecStart=/usr/bin/nwc-monitor --config /path/to/config.yml
-Restart=always
-RestartSec=10
+## 🏗️ Architecture
 
-[Install]
-WantedBy=multi-user.target
+### Subscription-First Design
+
 ```
+┌─────────────────────────────────────────────────────────────┐
+│  WalletMonitor                                              │
+│                                                             │
+│  1. Startup:                                                │
+│     └─ catchUp() ───> listTransactions (fill gap)          │
+│                                                             │
+│  2. Real-time:                                              │
+│     └─ subscribe() ──> Nostr relay subscription             │
+│                                                             │
+│  3. Fallback:                                               │
+│     └─ sanityCheck() ─> Periodic poll (every 60s)          │
+│                                                             │
+│  4. Reconnection:                                           │
+│     └─ onDisconnect() ─> wait → catchUp() → subscribe()    │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Processing Pipeline
+
+```
+Payment Received
+      ↓
+  Deduplication (processedIds Set)
+      ↓
+  Action Pipeline
+      ├─> Console Action
+      ├─> SQLite Action
+      ├─> Webhook Action
+      ├─> Email Action
+      ├─> File Action
+      └─> Custom Actions
+      ↓
+  Results Logged
+```
+
+## 📊 Monitoring
+
+### Enable Verbose Logging
 
 ```bash
-sudo systemctl enable nwc-monitor
-sudo systemctl start nwc-monitor
+nwc-monitor --config config/local.yml --verbose
 ```
 
-### Docker
+### SQLite Query Examples
 
-```dockerfile
-FROM oven/bun:1
-WORKDIR /app
-COPY . .
-RUN bun install && bun run build
-CMD ["./dist/index.js", "--config", "/config/config.yml"]
+```sql
+-- Total received per wallet
+SELECT wallet, SUM(amount_sats) as total_sats, COUNT(*) as count
+FROM payments
+GROUP BY wallet;
+
+-- Recent payments
+SELECT wallet, amount_sats, description, datetime(settled_at, 'unixepoch') as time
+FROM payments
+ORDER BY settled_at DESC
+LIMIT 10;
+
+-- Payments by type
+SELECT type, COUNT(*) as count, SUM(amount_sats) as total_sats
+FROM payments
+GROUP BY type;
 ```
 
-```yaml
-# docker-compose.yml
-services:
-  nwc-monitor:
-    build: .
-    volumes:
-      - ./config.yml:/config/config.yml:ro
-      - ./data:/app/data
-      - ~/.alby-cli:/root/.alby-cli:ro
-    restart: unless-stopped
-```
+## 🤝 Contributing
 
-## 📊 Use Cases
+Contributions are welcome! Please:
 
-### E-commerce Store
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-action`)
+3. Commit your changes (`git commit -m 'Add amazing action'`)
+4. Push to the branch (`git push origin feature/amazing-action`)
+5. Open a Pull Request
 
-Receive instant webhook notifications when customers pay:
-
-```yaml
-wallets:
-  - name: store
-    connection_file: "~/.alby-cli/store.key"
-    actions:
-      - type: webhook
-        url: "https://mystore.com/api/payment"
-      - type: sqlite
-        database: "./data/sales.db"
-```
-
-### Donation Tracker
-
-Email alerts for every donation:
-
-```yaml
-wallets:
-  - name: donations
-    connection_file: "~/.alby-cli/donations.key"
-    actions:
-      - type: email
-        to: "treasurer@nonprofit.org"
-        subject_template: "💝 Donation: {amount_sats} sats"
-      - type: file
-        path: "./data/donations.csv"
-        format: csv
-```
-
-### Multi-tenant SaaS
-
-Separate webhooks per tenant:
-
-```yaml
-wallets:
-  - name: tenant-1
-    connection_file: "~/.alby-cli/tenant1.key"
-    actions:
-      - type: webhook
-        url: "https://api.saas.com/tenant/1/payment"
-
-  - name: tenant-2
-    connection_file: "~/.alby-cli/tenant2.key"
-    actions:
-      - type: webhook
-        url: "https://api.saas.com/tenant/2/payment"
-```
-
-## 🛠️ Development
+### Development
 
 ```bash
 # Install dependencies
 bun install
 
-# Run in development mode
+# Run in development mode (auto-reload)
 bun run dev
 
-# Build for production
-bun run build
+# Type check
+bun run typecheck
 
-# Test the build
-./dist/index.js --config config/default.yml
+# Run tests (when available)
+bun test
 ```
 
-## 🤝 Contributing
+## 📝 License
 
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-### Development Guidelines
-
-- Use TypeScript strict mode
-- Follow existing code style
-- Add tests for new features
-- Update documentation
-
-## 📄 License
-
-MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License - see [LICENSE](LICENSE) for details.
 
 ## 🙏 Acknowledgments
 
-Built with:
-- [Bun](https://bun.sh) - Fast JavaScript runtime
-- [@getalby/sdk](https://github.com/getAlby/js-sdk) - Nostr Wallet Connect client
-- [Nostr](https://nostr.com) - Decentralized communication protocol
-
-## 🔗 Links
-
-- **npm:** https://www.npmjs.com/package/nwc-monitor
-- **GitHub:** https://github.com/claudiomolt/nwc-monitor
-- **Issues:** https://github.com/claudiomolt/nwc-monitor/issues
-- **Nostr Wallet Connect:** https://nwc.getalby.com/
-
-## 📞 Support
-
-- **GitHub Issues:** For bugs and feature requests
-- **Discussions:** For questions and community support
+- Built with [@getalby/sdk](https://github.com/getAlby/js-sdk)
+- Powered by [Bun](https://bun.sh)
+- Inspired by the Bitcoin Lightning and Nostr communities
 
 ---
 
-**Made with ⚡ and Nostr**
+**Built with ⚡ by Claudio | Bitcoin o Muerte 💀**
+
+[GitHub](https://github.com/claudiomolt/nwc-monitor) • [Issues](https://github.com/claudiomolt/nwc-monitor/issues) • [Discussions](https://github.com/claudiomolt/nwc-monitor/discussions)

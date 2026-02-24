@@ -3,7 +3,7 @@
 export interface Payment {
   id: string;
   wallet: string;
-  type: 'invoice' | 'keysend';
+  type: 'invoice' | 'keysend' | 'incoming' | 'outgoing';
   amount_sats: number;
   description?: string;
   payment_hash: string;
@@ -59,18 +59,4 @@ export interface AppConfig {
   };
   actions?: ActionConfig[];
   monitor: MonitorConfig;
-}
-
-export interface NWCTransaction {
-  type: string;
-  invoice?: string;
-  description?: string;
-  description_hash?: string;
-  preimage?: string;
-  payment_hash: string;
-  amount: number;
-  fees_paid: number;
-  created_at: number;
-  settled_at?: number;
-  metadata?: Record<string, any>;
 }

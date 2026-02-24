@@ -1,5 +1,5 @@
 /**
- * Simple logger with levels
+ * Simple console logger with levels and colors
  */
 
 export enum LogLevel {
@@ -9,35 +9,46 @@ export enum LogLevel {
   ERROR = 3,
 }
 
+const COLORS = {
+  DEBUG: '\x1b[36m', // Cyan
+  INFO: '\x1b[32m',  // Green
+  WARN: '\x1b[33m',  // Yellow
+  ERROR: '\x1b[31m', // Red
+  RESET: '\x1b[0m',
+};
+
 class Logger {
   private level: LogLevel = LogLevel.INFO;
 
-  setLevel(level: LogLevel) {
+  setLevel(level: LogLevel): void {
     this.level = level;
   }
 
-  debug(message: string, ...args: any[]) {
-    if (this.level <= LogLevel.DEBUG) {
-      console.log(`[DEBUG] ${message}`, ...args);
-    }
+  private log(level: LogLevel, levelName: string, ...args: unknown[]): void {
+    if (level < this.level) return;
+
+    const timestamp = new Date().toISOString();
+    const color = COLORS[levelName as keyof typeof COLORS] || '';
+    console.log(
+      `${color}[${timestamp}] ${levelName}${COLORS.RESET}`,
+      ...args
+    );
   }
 
-  info(message: string, ...args: any[]) {
-    if (this.level <= LogLevel.INFO) {
-      console.log(`[INFO] ${message}`, ...args);
-    }
+  debug(...args: unknown[]): void {
+    this.log(LogLevel.DEBUG, 'DEBUG', ...args);
   }
 
-  warn(message: string, ...args: any[]) {
-    if (this.level <= LogLevel.WARN) {
-      console.warn(`[WARN] ${message}`, ...args);
-    }
+  info(...args: unknown[]): void {
+    this.log(LogLevel.INFO, 'INFO', ...args);
   }
 
-  error(message: string, ...args: any[]) {
-    if (this.level <= LogLevel.ERROR) {
-      console.error(`[ERROR] ${message}`, ...args);
-    }
+  warn(...args: unknown[]): void {
+    this.log(LogLevel.WARN, 'WARN', ...args);
+  }
+
+  error(...args: unknown[]): void {
+    this.log(LogLevel.ERROR, 'ERROR', ...args);
   }
 }
 

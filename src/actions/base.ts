@@ -7,10 +7,10 @@ export abstract class BaseAction implements Action {
   public enabled: boolean;
   protected config: ActionConfig;
 
-  constructor(name: string) {
-    this.name = name;
+  constructor() {
+    this.name = 'base';
     this.enabled = true;
-    this.config = { type: name, enabled: true };
+    this.config = { type: 'base', enabled: true };
   }
 
   async init(config: ActionConfig): Promise<void> {

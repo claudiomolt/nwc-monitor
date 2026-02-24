@@ -1,50 +1,48 @@
-/**
- * Nostr / NWC helpers
- */
+// Nostr/NWC transaction parsing utilities
 
 import type { Payment } from '../types';
+import type { Nip47Transaction } from '@getalby/sdk/dist/NWCClient';
 
-/**
- * Parse a NWC transaction into our Payment format
- */
-export function parseTransaction(tx: any, walletName: string): Payment | null {
-  try {
-    if (tx.type !== 'incoming' || !tx.settled_at) {
-      return null;
-    }
-
-    const payment: Payment = {
-      id: tx.payment_hash || tx.invoice || `tx_${Date.now()}`,
-      wallet: walletName,
-      type: tx.invoice ? 'invoice' : 'keysend',
-      amount_sats: Math.round((tx.amount || 0) / 1000), // millisats to sats
-      description: tx.description || tx.memo || '',
-      payment_hash: tx.payment_hash || '',
-      preimage: tx.preimage || '',
-      payer_pubkey: tx.metadata?.payer_pubkey || '',
-      settled_at: tx.settled_at,
-      metadata: tx.metadata || {},
-    };
-
-    return payment;
-  } catch (error) {
-    console.error('Error parsing transaction:', error);
-    return null;
-  }
+export function parseTransaction(tx: Nip47Transaction, walletName: string): Payment {
+  // Generate unique ID from payment hash and settled_at
+  const id = `${tx.payment_hash}_${tx.settled_at || tx.created_at}`;
+  
+  // Determine payment type from transaction type
+  const type = tx.type as 'invoice' | 'keysend' | 'incoming' | 'outgoing';
+  
+  return {
+    id,
+    wallet: walletName,
+    type,
+    amount_sats: Math.abs(tx.amount / 1000), // Convert from msats to sats
+    description: tx.description,
+    payment_hash: tx.payment_hash,
+    preimage: tx.preimage,
+    payer_pubkey: tx.metadata?.payer_pubkey as string | undefined,
+    settled_at: (tx.settled_at || tx.created_at) * 1000, // Convert to milliseconds
+    metadata: tx.metadata,
+  };
 }
 
-/**
- * Template string replacement
- */
-export function fillTemplate(template: string, payment: Payment): string {
-  return template
-    .replace(/{wallet}/g, payment.wallet)
-    .replace(/{amount_sats}/g, payment.amount_sats.toString())
-    .replace(/{description}/g, payment.description || '')
-    .replace(/{payment_hash}/g, payment.payment_hash)
-    .replace(/{preimage}/g, payment.preimage || '')
-    .replace(/{payer_pubkey}/g, payment.payer_pubkey || '')
-    .replace(/{settled_at}/g, new Date(payment.settled_at * 1000).toISOString())
-    .replace(/{type}/g, payment.type)
-    .replace(/{id}/g, payment.id);
+export function isIncomingTransaction(tx: Nip47Transaction): boolean {
+  return tx.type === 'incoming';
+}
+
+export function shouldProcessTransaction(tx: Nip47Transaction, sinceTimestamp?: number): boolean {
+  // Only process incoming transactions
+  if (!isIncomingTransaction(tx)) {
+    return false;
+  }
+  
+  // Must be settled
+  if (!tx.settled_at || tx.state !== 'settled') {
+    return false;
+  }
+  
+  // Check if transaction is newer than since timestamp
+  if (sinceTimestamp && tx.settled_at <= sinceTimestamp) {
+    return false;
+  }
+  
+  return true;
 }

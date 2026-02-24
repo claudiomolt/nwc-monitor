@@ -1,85 +1,40 @@
-/**
- * SQLite action - save to database using Bun's built-in SQLite
- */
-
 import { Database } from 'bun:sqlite';
-import { BaseAction } from './base';
-import type { ActionResult, Payment } from '../types';
+import { dirname } from 'path';
 import { existsSync, mkdirSync } from 'fs';
-import { dirname, resolve } from 'path';
+import { BaseAction } from './base';
+import type { ActionConfig, ActionResult, Payment } from '../types';
 
-export class SQLiteAction extends BaseAction {
-  name = 'sqlite';
-  private db?: Database;
-  private dbPath: string = './data/payments.db';
-  private table: string = 'payments';
+export class SqliteAction extends BaseAction {
+  private db: Database;
+  private table: string;
 
-  async init(config: any): Promise<void> {
-    await super.init(config);
-    this.dbPath = resolve(config.database || this.dbPath);
-    this.table = config.table || this.table;
-
-    const dir = dirname(this.dbPath);
-    if (!existsSync(dir)) {
-      mkdirSync(dir, { recursive: true });
-    }
-
-    this.db = new Database(this.dbPath, { create: true });
-
-    this.db.run(`
-      CREATE TABLE IF NOT EXISTS ${this.table} (
-        id TEXT PRIMARY KEY,
-        wallet TEXT NOT NULL,
-        type TEXT NOT NULL,
-        amount_sats INTEGER NOT NULL,
-        description TEXT,
-        payment_hash TEXT NOT NULL,
-        preimage TEXT,
-        payer_pubkey TEXT,
-        settled_at INTEGER NOT NULL,
-        metadata TEXT,
-        created_at INTEGER DEFAULT (strftime('%s', 'now'))
-      )
-    `);
-
-    this.db.run(`CREATE INDEX IF NOT EXISTS idx_wallet ON ${this.table}(wallet)`);
-    this.db.run(`CREATE INDEX IF NOT EXISTS idx_settled_at ON ${this.table}(settled_at)`);
+  constructor(config: ActionConfig) {
+    super(config);
+    const dbPath = config.database as string;
+    this.table = (config.table as string) || 'payments';
+    if (!dbPath) throw new Error('SqliteAction requires "database"');
+    const dir = dirname(dbPath);
+    if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+    this.db = new Database(dbPath);
+    this.db.run(`CREATE TABLE IF NOT EXISTS ${this.table} (
+      id INTEGER PRIMARY KEY AUTOINCREMENT, wallet TEXT, type TEXT, invoice TEXT, description TEXT,
+      description_hash TEXT, preimage TEXT, payment_hash TEXT UNIQUE, amount INTEGER, fees_paid INTEGER,
+      created_at INTEGER, expires_at INTEGER, settled_at INTEGER, metadata TEXT,
+      recorded_at INTEGER DEFAULT (strftime('%s', 'now')))`);
   }
 
   async execute(payment: Payment): Promise<ActionResult> {
-    if (!this.db) {
-      return this.failure('Database not initialized');
-    }
-
     try {
-      const stmt = this.db.prepare(`
-        INSERT OR REPLACE INTO ${this.table} 
-        (id, wallet, type, amount_sats, description, payment_hash, preimage, payer_pubkey, settled_at, metadata)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `);
-
-      stmt.run(
-        payment.id,
-        payment.wallet,
-        payment.type,
-        payment.amount_sats,
-        payment.description || null,
-        payment.payment_hash,
-        payment.preimage || null,
-        payment.payer_pubkey || null,
-        payment.settled_at,
-        JSON.stringify(payment.metadata || {})
-      );
-
-      return this.success({ database: this.dbPath, table: this.table });
-    } catch (error: any) {
-      return this.failure(error.message);
-    }
-  }
-
-  async shutdown(): Promise<void> {
-    if (this.db) {
-      this.db.close();
+      const stmt = this.db.prepare(`INSERT INTO ${this.table} (wallet,type,invoice,description,description_hash,
+        preimage,payment_hash,amount,fees_paid,created_at,expires_at,settled_at,metadata)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`);
+      stmt.run(payment.wallet, payment.type, payment.invoice, payment.description, payment.description_hash,
+        payment.preimage, payment.payment_hash, payment.amount, payment.fees_paid, payment.created_at,
+        payment.expires_at, payment.settled_at, JSON.stringify(payment.metadata));
+      return this.success();
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('UNIQUE')) return this.success({ skipped: true });
+      return this.failure(error instanceof Error ? error.message : String(error));
     }
   }
 }

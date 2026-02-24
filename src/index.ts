@@ -1,147 +1,126 @@
 #!/usr/bin/env bun
-// CLI entry point for NWC Monitor
+/**
+ * NWC Monitor CLI entry point
+ */
 
-import { resolve } from 'path';
+import { parseArgs } from 'util';
 import { existsSync } from 'fs';
-import { loadConfig } from './config';
+import { resolve } from 'path';
+import { loadConfig, normalizeConfig } from './config';
 import { NWCMonitor } from './monitor';
-import { logger } from './utils/logger';
+import { logger, LogLevel } from './utils/logger';
+import { registerBuiltinActions } from './actions/index';
 
 const VERSION = '0.1.0';
 
-/**
- * Parse CLI arguments
- */
-function parseArgs() {
-  const args = process.argv.slice(2);
-  const options: Record<string, string | boolean> = {};
-  
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
-    
-    if (arg === '--help' || arg === '-h') {
-      options.help = true;
-    } else if (arg === '--version' || arg === '-v') {
-      options.version = true;
-    } else if (arg === '--verbose') {
-      options.verbose = true;
-    } else if (arg === '--config' || arg === '-c') {
-      options.config = args[++i];
-    } else {
-      console.error(`Unknown option: ${arg}`);
-      process.exit(1);
-    }
-  }
-  
-  return options;
-}
-
-/**
- * Show help message
- */
-function showHelp() {
+function showHelp(): void {
   console.log(`
-nwc-monitor v${VERSION}
-
-Monitor NWC (Nostr Wallet Connect) payments with pluggable actions.
+NWC Monitor v${VERSION}
+Monitor NWC (Nostr Wallet Connect) payments with pluggable actions
 
 USAGE:
   nwc-monitor [OPTIONS]
 
 OPTIONS:
-  -c, --config <path>    Path to YAML config file (default: ./config/default.yml)
-  --verbose              Enable verbose debug logging
-  -v, --version          Show version
-  -h, --help             Show this help
+  -c, --config <path>   Config file path (default: config/default.yml)
+  -v, --verbose         Enable verbose logging
+  -V, --version         Show version
+  -h, --help            Show this help
 
 EXAMPLES:
-  # Use default config
   nwc-monitor
+  nwc-monitor --config my-config.yml --verbose
 
-  # Use custom config
-  nwc-monitor --config ~/my-config.yml
-
-  # Enable verbose logging
-  nwc-monitor --verbose
-
-CONFIG:
-  See config/default.yml for a full example configuration.
-  Supports both single-wallet and multi-wallet setups.
-
-DOCUMENTATION:
+DOCS:
   https://github.com/claudiomolt/nwc-monitor
-`);
+  `);
 }
 
-/**
- * Main entry point
- */
-async function main() {
-  const options = parseArgs();
-  
-  // Show help
-  if (options.help) {
-    showHelp();
-    process.exit(0);
-  }
-  
-  // Show version
-  if (options.version) {
-    console.log(`nwc-monitor v${VERSION}`);
-    process.exit(0);
-  }
-  
-  // Enable verbose logging
-  if (options.verbose) {
-    logger.setVerbose(true);
-  }
-  
-  // Find config file
-  const configPath = options.config as string || './config/default.yml';
-  const resolvedPath = resolve(configPath);
-  
-  if (!existsSync(resolvedPath)) {
-    console.error(`Config file not found: ${resolvedPath}`);
-    console.error('Run with --help for usage information');
-    process.exit(1);
-  }
-  
+function showVersion(): void {
+  console.log(`nwc-monitor v${VERSION}`);
+}
+
+async function main(): Promise<void> {
   try {
+    // Parse CLI arguments
+    const { values } = parseArgs({
+      options: {
+        config: { type: 'string', short: 'c', default: 'config/default.yml' },
+        verbose: { type: 'boolean', short: 'v', default: false },
+        version: { type: 'boolean', short: 'V', default: false },
+        help: { type: 'boolean', short: 'h', default: false },
+      },
+      strict: true,
+    });
+
+    if (values.help) {
+      showHelp();
+      process.exit(0);
+    }
+
+    if (values.version) {
+      showVersion();
+      process.exit(0);
+    }
+
+    // Set log level
+    if (values.verbose) {
+      logger.setLevel(LogLevel.DEBUG);
+    }
+
     // Load config
-    logger.info(`Loading config from ${resolvedPath}...`);
-    const config = await loadConfig(resolvedPath);
+    const configPath = resolve(values.config || 'config/default.yml');
+    if (!existsSync(configPath)) {
+      logger.error(`Config file not found: ${configPath}`);
+      process.exit(1);
+    }
+
+    logger.info(`Loading config from: ${configPath}`);
+    const config = loadConfig(configPath);
+
+    // Normalize to multi-wallet format
+    const wallets = normalizeConfig(config);
+    logger.info(`Configured ${wallets.length} wallet(s)`);
+
+    // Build connection strings map
+    const connectionStrings = new Map<string, string>();
     
+    // Legacy single-wallet
+    if (config.nwc && !config.wallets) {
+      connectionStrings.set('default', config.nwc);
+    }
+    
+    // Multi-wallet
+    if (config.wallets) {
+      for (const wallet of config.wallets) {
+        connectionStrings.set(wallet.name, wallet.nwc);
+      }
+    }
+
+    // Register built-in actions
+    registerBuiltinActions();
+
     // Create and start monitor
-    const monitor = new NWCMonitor(config.wallets!, config.monitor);
-    
-    // Handle graceful shutdown
-    const shutdown = async () => {
-      logger.info('\nShutdown signal received...');
-      await monitor.stop();
+    const monitor = new NWCMonitor(wallets, connectionStrings, config.monitor);
+
+    // Graceful shutdown
+    const shutdown = () => {
+      logger.info('Received shutdown signal, stopping monitor...');
+      monitor.stop();
       process.exit(0);
     };
-    
+
     process.on('SIGINT', shutdown);
     process.on('SIGTERM', shutdown);
-    
+
     // Start monitoring
     await monitor.start();
-    
-    // Keep process alive
-    logger.info('Monitoring payments... Press Ctrl+C to stop');
-    
+
+    logger.info('NWC Monitor running (relay subscription + fallback polling). Press Ctrl+C to stop.');
   } catch (error) {
-    logger.error('Fatal error:', error);
+    logger.error('Fatal error:', error instanceof Error ? error.message : String(error));
     process.exit(1);
   }
 }
 
-// Run if executed directly
-if (import.meta.main) {
-  main().catch((error) => {
-    console.error('Unhandled error:', error);
-    process.exit(1);
-  });
-}
-
-export { main };
+main();

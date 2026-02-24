@@ -1,86 +1,128 @@
-/**
- * Configuration loader and validator
- */
+// Configuration loader with YAML support and legacy compatibility
 
 import { parse } from 'yaml';
 import { existsSync } from 'fs';
+import { readFile } from 'fs/promises';
 import { resolve } from 'path';
-import type { AppConfig, WalletConfig } from './types';
-import { logger } from './utils/logger';
+import type { AppConfig, WalletConfig, MonitorConfig } from './types';
 
-const DEFAULT_CONFIG_PATH = './config/default.yml';
+const DEFAULT_MONITOR_CONFIG: MonitorConfig = {
+  retry_delay: 10000,
+  max_retries: -1,
+  sanity_check_interval: 60000,
+  since_startup: true,
+};
 
-function expandHome(path: string): string {
-  if (path.startsWith('~/')) {
-    return resolve(process.env.HOME || '~', path.slice(2));
+/**
+ * Expand tilde in file paths to home directory
+ */
+function expandTilde(filePath: string): string {
+  if (filePath.startsWith('~/')) {
+    const home = process.env.HOME || process.env.USERPROFILE || '';
+    return filePath.replace('~', home);
   }
-  return path;
-}
-
-export async function loadConfig(configPath?: string): Promise<AppConfig> {
-  const path = configPath || DEFAULT_CONFIG_PATH;
-  const resolvedPath = resolve(path);
-
-  if (!existsSync(resolvedPath)) {
-    throw new Error(`Config file not found: ${resolvedPath}`);
-  }
-
-  logger.info(`Loading config from: ${resolvedPath}`);
-
-  const file = Bun.file(resolvedPath);
-  const content = await file.text();
-  const config = parse(content) as AppConfig;
-
-  // Default monitor settings
-  if (!config.monitor) {
-    config.monitor = {
-      poll_interval: 5000,
-      retry_delay: 10000,
-      max_retries: -1,
-      since_startup: true,
-    };
-  }
-
-  // Validate wallets
-  if (!config.wallets || config.wallets.length === 0) {
-    throw new Error('No wallets configured. Add at least one wallet in the config.');
-  }
-
-  for (const wallet of config.wallets) {
-    if (!wallet.name) {
-      throw new Error('Each wallet must have a "name"');
-    }
-    if (!wallet.connection_file && !wallet.connection_string) {
-      throw new Error(`Wallet "${wallet.name}": either connection_file or connection_string required`);
-    }
-    if (!wallet.actions || wallet.actions.length === 0) {
-      logger.warn(`Wallet "${wallet.name}": no actions configured, using console only`);
-      wallet.actions = [{ type: 'console', enabled: true }];
-    }
-  }
-
-  return config;
+  return filePath;
 }
 
 /**
- * Load NWC connection string for a wallet
+ * Read connection string from file
  */
-export async function loadConnectionString(wallet: WalletConfig): Promise<string> {
-  if (wallet.connection_string) {
-    return wallet.connection_string;
+async function readConnectionFile(filePath: string): Promise<string> {
+  const expanded = expandTilde(filePath);
+  const resolved = resolve(expanded);
+  
+  if (!existsSync(resolved)) {
+    throw new Error(`Connection file not found: ${resolved}`);
   }
+  
+  const content = await readFile(resolved, 'utf-8');
+  return content.trim();
+}
 
-  if (wallet.connection_file) {
-    const path = expandHome(wallet.connection_file);
-
-    if (!existsSync(path)) {
-      throw new Error(`Connection file not found for wallet "${wallet.name}": ${path}`);
+/**
+ * Load and validate configuration from YAML file
+ */
+export async function loadConfig(configPath: string): Promise<AppConfig> {
+  const resolved = resolve(configPath);
+  
+  if (!existsSync(resolved)) {
+    throw new Error(`Config file not found: ${resolved}`);
+  }
+  
+  const content = await readFile(resolved, 'utf-8');
+  const raw = parse(content);
+  
+  // Handle legacy single-wallet format
+  if (raw.nwc && !raw.wallets) {
+    const legacyWallet = await convertLegacyConfig(raw);
+    raw.wallets = [legacyWallet];
+  }
+  
+  // Validate config
+  if (!raw.wallets || !Array.isArray(raw.wallets) || raw.wallets.length === 0) {
+    throw new Error('Config must have at least one wallet in "wallets" array');
+  }
+  
+  // Merge monitor config with defaults
+  const monitorConfig: MonitorConfig = {
+    ...DEFAULT_MONITOR_CONFIG,
+    ...raw.monitor,
+  };
+  
+  // Process each wallet config
+  const wallets: WalletConfig[] = [];
+  for (const wallet of raw.wallets) {
+    if (!wallet.name) {
+      throw new Error('Each wallet must have a "name" field');
     }
-
-    const file = Bun.file(path);
-    const content = await file.text();
-    return content.trim();
+    
+    // Load connection string
+    let connectionString: string | undefined;
+    
+    if (wallet.connection_file) {
+      connectionString = await readConnectionFile(wallet.connection_file);
+    } else if (wallet.connection_string) {
+      connectionString = wallet.connection_string;
+    } else {
+      throw new Error(`Wallet "${wallet.name}" must have either connection_file or connection_string`);
+    }
+    
+    // Validate actions
+    if (!wallet.actions || !Array.isArray(wallet.actions) || wallet.actions.length === 0) {
+      throw new Error(`Wallet "${wallet.name}" must have at least one action`);
+    }
+    
+    wallets.push({
+      name: wallet.name,
+      connection_string: connectionString,
+      actions: wallet.actions,
+      monitor: wallet.monitor ? { ...monitorConfig, ...wallet.monitor } : undefined,
+    });
   }
+  
+  return {
+    wallets,
+    monitor: monitorConfig,
+  };
+}
 
-  throw new Error(`No connection string for wallet "${wallet.name}"`);
+/**
+ * Convert legacy single-wallet config to multi-wallet format
+ */
+async function convertLegacyConfig(raw: any): Promise<WalletConfig> {
+  let connectionString: string | undefined;
+  
+  if (raw.nwc.connection_file) {
+    connectionString = await readConnectionFile(raw.nwc.connection_file);
+  } else if (raw.nwc.connection_string) {
+    connectionString = raw.nwc.connection_string;
+  } else {
+    throw new Error('Legacy config must have either nwc.connection_file or nwc.connection_string');
+  }
+  
+  return {
+    name: 'default',
+    connection_string: connectionString,
+    actions: raw.actions || [],
+  };
 }
