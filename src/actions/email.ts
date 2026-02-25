@@ -157,6 +157,12 @@ export class EmailAction extends BaseAction {
         buffer = lines.pop() || '';
         for (const line of lines) {
           if (line.length > 0) {
+            // Multi-line responses: 250-... are continuations, 250 ... is final
+            // Only process the final line of multi-line responses
+            if (line.length >= 4 && line[3] === '-') {
+              logger.debug(`SMTP continuation: ${line.trim()}`);
+              continue;
+            }
             processResponse(line);
           }
         }
