@@ -21,6 +21,7 @@ export function registerBuiltinActions(): void {
   actionRegistry.set('sqlite', SqliteAction);
   actionRegistry.set('webhook', WebhookAction);
   actionRegistry.set('session-send', SessionSendAction);
+  actionRegistry.set('session_send', SessionSendAction);
   actionRegistry.set('email', EmailAction);
 }
 

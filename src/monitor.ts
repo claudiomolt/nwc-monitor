@@ -110,7 +110,11 @@ export class WalletMonitor {
             logger.debug(`Notification for wallet ${this.wallet.name}:`, notification.notification_type);
 
             if (notification.notification_type === 'payment_received') {
-              await this.processTransaction(notification);
+              const n = notification.notification || notification;
+              logger.debug(`Notification received for ${this.wallet.name}, fetching full details via listTransactions`);
+              // Subscription gives us a signal but incomplete data
+              // Use listTransactions to get the full payment details
+              await this.catchUp();
             }
           } catch (error) {
             logger.error(`Error processing notification for wallet ${this.wallet.name}:`, error);

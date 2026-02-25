@@ -28,7 +28,7 @@ export abstract class BaseAction implements Action {
   protected replaceTemplates(template: string, payment: Payment): string {
     return template
       .replace(/\{wallet\}/g, payment.wallet)
-      .replace(/\{amount_sats\}/g, payment.amount.toString())
+      .replace(/\{amount_sats\}/g, Math.floor(payment.amount / 1000).toString())
       .replace(/\{amount_btc\}/g, (payment.amount / 100_000_000).toFixed(8))
       .replace(/\{description\}/g, payment.description)
       .replace(/\{payment_hash\}/g, payment.payment_hash)

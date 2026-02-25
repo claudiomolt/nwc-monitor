@@ -13,7 +13,7 @@ export function parseTransaction(tx: any, walletName: string): Payment {
     description_hash: tx.description_hash || null,
     preimage: tx.preimage || '',
     payment_hash: tx.payment_hash || '',
-    amount: tx.amount || 0,
+    amount: tx.amount || 0, // NWC returns millisats
     fees_paid: tx.fees_paid || 0,
     created_at: tx.created_at || 0,
     expires_at: tx.expires_at || null,

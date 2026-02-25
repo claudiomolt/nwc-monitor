@@ -1,5 +1,5 @@
 /**
- * SessionSend action - notify OpenClaw gateway agent
+ * SessionSend action - notify via OpenClaw CLI
  */
 
 import { BaseAction } from './base';
@@ -7,45 +7,40 @@ import type { ActionConfig, ActionResult, Payment } from '../types';
 import { logger } from '../utils/logger';
 
 export class SessionSendAction extends BaseAction {
-  private gatewayUrl: string;
-  private sessionId: string;
+  private channel: string;
+  private target: string;
   private template: string;
 
   constructor(config: ActionConfig) {
     super(config);
-    this.gatewayUrl = (config.gatewayUrl as string) || 'http://localhost:3000';
-    this.sessionId = config.sessionId as string;
+    this.channel = (config.channel as string) || 'whatsapp';
+    this.target = config.target as string;
     this.template = (config.template as string) || 
-      'Payment received on {wallet}: {amount_sats} sats - {description}';
+      '⚡ Payment received on {wallet}: {amount_sats} sats - {description}';
 
-    if (!this.sessionId) {
-      throw new Error('SessionSendAction requires "sessionId" config');
+    if (!this.target) {
+      throw new Error('SessionSendAction requires "target" (phone number or chat id)');
     }
   }
 
   async execute(payment: Payment): Promise<ActionResult> {
+    const message = this.replaceTemplates(this.template, payment);
+
     try {
-      const message = this.replaceTemplates(this.template, payment);
+      const proc = Bun.spawn(
+        ['openclaw', 'message', 'send', '--channel', this.channel, '--target', this.target, '--message', message],
+        { stdout: 'pipe', stderr: 'pipe', timeout: 15000 }
+      );
 
-      const response = await fetch(`${this.gatewayUrl}/api/sessions/${this.sessionId}/messages`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          role: 'user',
-          content: message,
-          metadata: {
-            source: 'nwc-monitor',
-            payment_hash: payment.payment_hash,
-            wallet: payment.wallet,
-          },
-        }),
-      });
+      const exitCode = await proc.exited;
+      const stdout = await new Response(proc.stdout).text();
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      if (exitCode !== 0) {
+        const stderr = await new Response(proc.stderr).text();
+        throw new Error(`openclaw CLI exited with code ${exitCode}: ${stderr}`);
       }
 
-      logger.debug(`Session message sent to ${this.sessionId}`);
+      logger.info(`Notified ${this.target} via ${this.channel}`);
       return this.success();
     } catch (error) {
       return this.failure(error instanceof Error ? error.message : String(error));
