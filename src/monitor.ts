@@ -3,39 +3,11 @@
  */
 
 import { nwc } from '@getalby/sdk';
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
-import { join, dirname } from 'path';
 import type { WalletConfig, MonitorConfig, Payment } from './types';
 import { logger } from './utils/logger';
 import { parseTransaction } from './utils/nostr';
 import { ActionPipeline } from './actions/index';
-
-const STATE_DIR = join(process.cwd(), 'data');
-const STATE_FILE = join(STATE_DIR, 'state.json');
-
-interface PersistedState {
-  wallets: Record<string, { seenHashes: string[]; lastSeenTimestamp: number }>;
-}
-
-function loadState(): PersistedState {
-  try {
-    if (existsSync(STATE_FILE)) {
-      return JSON.parse(readFileSync(STATE_FILE, 'utf-8'));
-    }
-  } catch (e) {
-    logger.warn('Failed to load state file, starting fresh');
-  }
-  return { wallets: {} };
-}
-
-function saveState(state: PersistedState): void {
-  try {
-    if (!existsSync(STATE_DIR)) mkdirSync(STATE_DIR, { recursive: true });
-    writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
-  } catch (e) {
-    logger.error('Failed to save state:', e);
-  }
-}
+import { hasSeen, markSeen } from './utils/dedup';
 
 /**
  * Monitor a single wallet via relay subscription
@@ -45,7 +17,6 @@ export class WalletMonitor {
   private config: MonitorConfig;
   private client: nwc.NWCClient;
   private pipeline: ActionPipeline;
-  private seenHashes: Set<string>;
   private lastSeenTimestamp: number;
   private running: boolean;
   private subscriptionActive: boolean;
@@ -59,19 +30,8 @@ export class WalletMonitor {
     this.pipeline = new ActionPipeline(wallet.actions);
     this.running = false;
     this.subscriptionActive = false;
-
-    // Load persisted state
-    const state = loadState();
-    const walletState = state.wallets[wallet.name];
-    if (walletState) {
-      this.seenHashes = new Set(walletState.seenHashes);
-      this.lastSeenTimestamp = walletState.lastSeenTimestamp;
-      logger.info(`Restored state for wallet ${wallet.name}: ${this.seenHashes.size} seen hashes, last timestamp ${this.lastSeenTimestamp}`);
-    } else {
-      this.seenHashes = new Set();
-      this.lastSeenTimestamp = Math.floor(Date.now() / 1000);
-      logger.info(`No previous state for wallet ${wallet.name}, starting from now`);
-    }
+    // Start from 24 hours ago to catch any recent payments on first run
+    this.lastSeenTimestamp = Math.floor(Date.now() / 1000) - (24 * 60 * 60);
   }
 
   async start(): Promise<void> {
@@ -111,17 +71,7 @@ export class WalletMonitor {
       this.sanityCheckTimer = undefined;
     }
 
-    this.persistState();
     logger.info(`Stopped monitor for wallet: ${this.wallet.name}`);
-  }
-
-  private persistState(): void {
-    const state = loadState();
-    state.wallets[this.wallet.name] = {
-      seenHashes: Array.from(this.seenHashes).slice(-500), // Keep last 500
-      lastSeenTimestamp: this.lastSeenTimestamp,
-    };
-    saveState(state);
   }
 
   private async catchUp(): Promise<void> {
@@ -206,12 +156,15 @@ export class WalletMonitor {
     try {
       if (tx.type !== 'incoming' || !tx.settled_at) return;
 
-      if (this.seenHashes.has(tx.payment_hash)) {
-        logger.debug(`Skipping duplicate: ${tx.payment_hash}`);
+      // Check file-based dedup
+      if (hasSeen(tx.payment_hash)) {
+        logger.debug(`Skipping duplicate (seen in file): ${tx.payment_hash}`);
         return;
       }
 
-      this.seenHashes.add(tx.payment_hash);
+      // Mark as seen BEFORE executing pipeline (so if pipeline fails, we don't retry)
+      markSeen(tx.payment_hash);
+      logger.info(`New payment: ${tx.payment_hash}`);
 
       const payment = parseTransaction(tx, this.wallet.name);
       await this.pipeline.execute(payment);
@@ -219,9 +172,6 @@ export class WalletMonitor {
       if (tx.settled_at && tx.settled_at > this.lastSeenTimestamp) {
         this.lastSeenTimestamp = tx.settled_at;
       }
-
-      // Persist state to disk
-      this.persistState();
     } catch (error) {
       logger.error(`Failed to process transaction for wallet ${this.wallet.name}:`, error);
     }
