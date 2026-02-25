@@ -42,15 +42,23 @@ function loadSeenHashes(): Set<string> {
 
 export function hasSeen(hash: string): boolean {
   const seen = loadSeenHashes();
-  return seen.has(hash);
+  const result = seen.has(hash);
+  if (result) {
+    console.log(`[DEDUP] Hash ${hash.substring(0, 16)}... already seen (${seen.size} total)`);
+  }
+  return result;
 }
 
 export function markSeen(hash: string): void {
   const seen = loadSeenHashes();
   
-  if (seen.has(hash)) return; // Already marked
+  if (seen.has(hash)) {
+    console.log(`[DEDUP] Hash ${hash.substring(0, 16)}... already marked, skipping`);
+    return; // Already marked
+  }
   
   seen.add(hash);
+  console.log(`[DEDUP] Marking new hash ${hash.substring(0, 16)}... (now ${seen.size} total)`);
   
   ensureDataDir();
   try {
