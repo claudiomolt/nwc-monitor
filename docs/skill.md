@@ -6,6 +6,17 @@ Runs as a systemd service. Notifies you on every incoming payment.
 ## Install (copy-paste all at once)
 
 ```bash
+# Install bun if missing
+if ! command -v bun &>/dev/null; then
+  curl -fsSL https://bun.sh/install | bash
+  export PATH="$HOME/.bun/bin:$PATH"
+fi
+
+# Install git if missing
+if ! command -v git &>/dev/null; then
+  sudo apt-get update && sudo apt-get install -y git || brew install git
+fi
+
 # Clone and build
 git clone https://github.com/claudiomolt/nwc-monitor.git ~/.nwc-monitor/repo
 cd ~/.nwc-monitor/repo && bun install && bun run build
