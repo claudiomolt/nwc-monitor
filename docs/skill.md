@@ -93,7 +93,11 @@ Before creating the config, resolve the NWC connection string:
 
 1. **Check for alby-cli:** Look for `~/.alby-cli/connection-secret-*.key` files. If found, ask the user which wallet to use. Read the NWC string from that file.
 2. **Ask the user:** If no alby-cli, ask if they have an NWC connection string (from Alby Hub, LNbits, etc.).
-3. **Create one with lncurl:** If they don't have one, offer to create a disposable wallet using the `lncurl` skill. Warn: lncurl wallets cost ~1 sat/hour and die when balance hits 0.
+3. **Create one with lncurl:** If they don't have one, offer to create a disposable wallet:
+   ```bash
+   curl -s -X POST https://lncurl.lol
+   ```
+   This returns a ready-to-use NWC string. ⚠️ lncurl wallets cost ~1 sat/hour and die when balance hits 0. Fund via the lightning address to keep alive.
 
 Once you have the NWC string, create `~/.nwc-monitor/config.yml`:
 
