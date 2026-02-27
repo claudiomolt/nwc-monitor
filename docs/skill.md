@@ -29,9 +29,11 @@ BUN_PATH="$(which bun)"
 OPENCLAW_PATH="$(which openclaw 2>/dev/null || true)"
 EXTRA_PATH="${OPENCLAW_PATH:+$(dirname $OPENCLAW_PATH):}"
 
-# Create systemd service
-mkdir -p ~/.config/systemd/user
-cat > ~/.config/systemd/user/nwc-monitor.service << EOF
+# Setup service (systemd or nohup fallback)
+if command -v systemctl &>/dev/null && systemctl --user status &>/dev/null 2>&1; then
+  # systemd available
+  mkdir -p ~/.config/systemd/user
+  cat > ~/.config/systemd/user/nwc-monitor.service << EOF
 [Unit]
 Description=NWC Monitor
 After=network-online.target
@@ -48,11 +50,32 @@ Environment=PATH=${EXTRA_PATH}$(dirname $BUN_PATH):/usr/local/bin:/usr/bin:/bin
 [Install]
 WantedBy=default.target
 EOF
-
-systemctl --user daemon-reload
+  systemctl --user daemon-reload
+  echo "✅ systemd service created"
+else
+  # No systemd — create nohup launcher
+  cat > ~/.nwc-monitor/start.sh << EOF
+#!/bin/bash
+cd ~/.nwc-monitor/repo
+export PATH="${EXTRA_PATH}$(dirname $BUN_PATH):/usr/local/bin:/usr/bin:/bin"
+nohup $BUN_PATH run dist/index.js >> ~/.nwc-monitor/nwc-monitor.log 2>&1 &
+echo \$! > ~/.nwc-monitor/nwc-monitor.pid
+echo "✅ NWC Monitor started (pid \$!)"
+EOF
+  cat > ~/.nwc-monitor/stop.sh << EOF
+#!/bin/bash
+if [ -f ~/.nwc-monitor/nwc-monitor.pid ]; then
+  kill \$(cat ~/.nwc-monitor/nwc-monitor.pid) 2>/dev/null
+  rm ~/.nwc-monitor/nwc-monitor.pid
+  echo "⏹ NWC Monitor stopped"
+else
+  echo "Not running"
+fi
+EOF
+  chmod +x ~/.nwc-monitor/start.sh ~/.nwc-monitor/stop.sh
+  echo "✅ nohup launcher created (no systemd found)"
+fi
 ```
-
-**Prerequisite:** bun (`curl -fsSL https://bun.sh/install | bash`)
 
 ## Configure
 
@@ -94,10 +117,12 @@ If the user doesn't have one, create a wallet with the `lncurl` skill, or ask th
 ## Start
 
 ```bash
+# systemd
 systemctl --user enable --now nwc-monitor
-```
 
-Verify: `systemctl --user status nwc-monitor`
+# nohup (no systemd)
+bash ~/.nwc-monitor/start.sh
+```
 
 ## Wallet CLI
 
@@ -127,10 +152,15 @@ Multi-wallet: add `--wallet <name>` to any command.
 ## Service management
 
 ```bash
+# systemd
 systemctl --user status nwc-monitor     # status
 systemctl --user restart nwc-monitor    # restart
 journalctl --user -u nwc-monitor -f     # logs
-systemctl --user disable nwc-monitor    # disable auto-start
+
+# nohup
+cat ~/.nwc-monitor/nwc-monitor.pid      # check pid
+tail -f ~/.nwc-monitor/nwc-monitor.log  # logs
+bash ~/.nwc-monitor/stop.sh             # stop
 ```
 
 ## Troubleshooting
