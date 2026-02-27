@@ -56,14 +56,12 @@ nwc-monitor --config ~/my-config.yml
 
 ```yaml
 monitor:
-  retry_delay: 10000              # Retry delay in milliseconds
-  max_retries: -1                 # -1 for infinite retries
-  sanity_check_interval: 60000    # Polling fallback interval (60s)
-  since_startup: true             # Start from current time
+  pollInterval: 60000             # Polling fallback interval in ms
+  limit: 50                       # Max payments per poll
 
 wallets:
   - name: personal
-    connection_file: "~/.alby-cli/connection-secret-personal.key"
+    nwc: "nostr+walletconnect://PUBKEY?relay=wss://relay.example.com&secret=SECRET"
     actions:
       - type: console
         enabled: true
@@ -72,9 +70,7 @@ wallets:
         database: "./data/personal.db"
 
   - name: store
-    connection_string: "nostr+walletconnect://..."
-    monitor:
-      sanity_check_interval: 30000  # Override per wallet
+    nwc: "nostr+walletconnect://..."
     actions:
       - type: webhook
         enabled: true
@@ -83,19 +79,21 @@ wallets:
           Authorization: "Bearer TOKEN"
         retry: 3
         timeout: 5000
+      - type: session_send
+        enabled: true
+        channel: whatsapp
+        target: "+1234567890"
+        template: "⚡ Sale: {amount_sats} sats — {description}"
 ```
 
 ### Legacy Single-Wallet Format
 
 ```yaml
-nwc:
-  connection_file: "~/.alby-cli/connection-secret.key"
+nwc: "nostr+walletconnect://PUBKEY?relay=wss://relay.example.com&secret=SECRET"
 
 monitor:
-  retry_delay: 10000
-  max_retries: -1
-  sanity_check_interval: 60000
-  since_startup: true
+  pollInterval: 60000
+  limit: 50
 
 actions:
   - type: console
@@ -212,14 +210,14 @@ Send payment notifications via SMTP.
 
 ### 6. Session Send (OpenClaw Integration)
 
-Notify OpenClaw agent via HTTP.
+Send payment notifications via OpenClaw CLI (`openclaw message send`). Requires `openclaw` in PATH.
 
 ```yaml
 - type: session_send
   enabled: true
-  gateway_url: "http://localhost:3000"
-  agent_id: "main"
-  message_template: "⚡ Payment: {amount_sats} sats - {description}"
+  channel: whatsapp          # whatsapp | telegram | discord | signal
+  target: "+1234567890"   # phone number or chat id
+  template: "⚡ Payment received: {amount_sats} sats — {description}"
 ```
 
 ## 🎨 Template Variables
@@ -391,6 +389,66 @@ LIMIT 10;
 SELECT type, COUNT(*) as count, SUM(amount_sats) as total_sats
 FROM payments
 GROUP BY type;
+```
+
+## 🚀 Deployment (systemd)
+
+Run NWC Monitor as a persistent service that starts automatically on boot.
+
+### 1. Build
+
+```bash
+cd nwc-monitor
+bun install
+bun run build
+```
+
+### 2. Create systemd user service
+
+```bash
+mkdir -p ~/.config/systemd/user
+
+cat > ~/.config/systemd/user/nwc-monitor.service << 'EOF'
+[Unit]
+Description=NWC Monitor — Lightning payment monitor
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/path/to/nwc-monitor
+ExecStart=/path/to/bun run dist/index.js
+Restart=always
+RestartSec=10
+Environment=NODE_ENV=production
+Environment=PATH=/home/USER/.npm-global/bin:/home/USER/.bun/bin:/usr/local/bin:/usr/bin:/bin
+
+[Install]
+WantedBy=default.target
+EOF
+```
+
+> **⚠️ Important:** The `PATH` must include the directory where `openclaw` is installed if you use the `session_send` action. Find it with `which openclaw`.
+
+### 3. Enable and start
+
+```bash
+systemctl --user daemon-reload
+systemctl --user enable nwc-monitor   # auto-start on boot
+systemctl --user start nwc-monitor
+```
+
+### 4. Verify
+
+```bash
+systemctl --user status nwc-monitor
+journalctl --user -u nwc-monitor -f   # follow logs
+```
+
+### 5. Enable lingering (required for user services to run without login)
+
+```bash
+sudo loginctl enable-linger $USER
 ```
 
 ## 🤝 Contributing

@@ -15,3 +15,9 @@ wallets:
       - type: sqlite
         enabled: true
         database: "./data/claudio.db"
+
+      - type: session_send
+        enabled: true
+        channel: whatsapp
+        target: "+1234567890"
+        template: "⚡ Pago recibido: {amount_sats} sats — {description}"
