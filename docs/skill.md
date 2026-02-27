@@ -77,6 +77,16 @@ EOF
 fi
 ```
 
+**No systemd?** After install, ask the user if they want NWC Monitor to start automatically with OpenClaw. If yes, add this to the agent's `BOOTSTRAP.md` (or create it):
+
+```markdown
+## NWC Monitor
+Start the payment monitor on agent boot:
+```bash
+bash ~/.nwc-monitor/start.sh
+```
+```
+
 ## Configure
 
 Create `~/.nwc-monitor/config.yml` with the user's NWC connection string:
