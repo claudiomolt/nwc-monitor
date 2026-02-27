@@ -10,6 +10,7 @@ import { SqliteAction } from './sqlite';
 import { WebhookAction } from './webhook';
 import { SessionSendAction } from './session-send';
 import { EmailAction } from './email';
+import { LightningForwardAction } from './lightning-forward';
 
 type ActionConstructor = new (config: ActionConfig) => Action;
 
@@ -23,6 +24,8 @@ export function registerBuiltinActions(): void {
   actionRegistry.set('session-send', SessionSendAction);
   actionRegistry.set('session_send', SessionSendAction);
   actionRegistry.set('email', EmailAction);
+  actionRegistry.set('lightning-forward', LightningForwardAction);
+  actionRegistry.set('lightning_forward', LightningForwardAction);
 }
 
 export function registerAction(type: string, constructor: ActionConstructor): void {

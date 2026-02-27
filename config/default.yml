@@ -1,99 +1,17 @@
-# NWC Monitor Configuration
-# Full example with multi-wallet support
+# NWC Monitor — Production Config
 
 monitor:
-  # Delay between retries (milliseconds)
-  retry_delay: 10000
-  
-  # Maximum retry attempts (-1 for infinite)
-  max_retries: -1
-  
-  # Interval for sanity check polling (milliseconds)
-  sanity_check_interval: 60000
-  
-  # Start monitoring from service startup time
-  since_startup: true
-  
-  # Or specify a Unix timestamp to start from
-  # since_timestamp: 1234567890
+  pollInterval: 60000
+  limit: 50
 
-# Multiple wallets, each with independent actions
 wallets:
-  # Personal wallet - basic console and SQLite logging
-  - name: personal
-    connection_file: "~/.alby-cli/connection-secret-personal.key"
+  - name: claudio
+    nwc: "nostr+walletconnect://PUBKEY?relay=wss://relay.example.com&secret=SECRET"
     actions:
       - type: console
         enabled: true
         template: "⚡ [{wallet}] {amount_sats} sats - {description}"
-      
+
       - type: sqlite
         enabled: true
-        database: "./data/personal.db"
-
-  # Store wallet - webhook notifications and email
-  - name: store
-    connection_file: "~/.alby-cli/connection-secret-store.key"
-    monitor:
-      # Override sanity check interval for this wallet
-      sanity_check_interval: 30000
-    actions:
-      - type: webhook
-        enabled: true
-        url: "https://mystore.com/api/payment"
-        headers:
-          Authorization: "Bearer YOUR_SECRET_TOKEN"
-          X-Wallet: "store"
-        retry: 3
-        timeout: 5000
-      
-      - type: email
-        enabled: true
-        smtp:
-          host: smtp.gmail.com
-          port: 465
-          secure: true
-          user: "store@gmail.com"
-          pass: "your-app-password"
-        from: "Lightning Store <store@gmail.com>"
-        to: "owner@example.com"
-        subject_template: "⚡ Sale: {amount_sats} sats"
-        body_template: |
-          New payment received!
-          
-          Amount: {amount_sats} sats
-          Description: {description}
-          Type: {type}
-          Payment Hash: {payment_hash}
-          Time: {settled_at}
-      
-      - type: sqlite
-        enabled: true
-        database: "./data/store.db"
-
-  # Donations wallet - OpenClaw integration
-  - name: donations
-    connection_string: "nostr+walletconnect://..."
-    actions:
-      - type: console
-        enabled: true
-      
-      - type: session_send
-        enabled: true
-        gateway_url: "http://localhost:3000"
-        agent_id: "main"
-        message_template: "⚡ Donation: {amount_sats} sats - {description}"
-      
-      - type: file
-        enabled: true
-        path: "./data/donations.jsonl"
-        format: "jsonl"
-
-# Legacy single-wallet format (also supported):
-#
-# nwc:
-#   connection_file: "~/.alby-cli/connection-secret.key"
-#
-# actions:
-#   - type: console
-#     enabled: true
+        database: "./data/claudio.db"
