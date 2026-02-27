@@ -336,7 +336,11 @@ footer .container{display:flex;flex-direction:column;align-items:center;gap:16px
           <div class="chat-msg chat-user chat-anim" style="--i:12"><div class="chat-bubble">Send me a voice note when someone tips me</div></div>
           <div class="chat-typing chat-anim" style="--i:13"><div class="chat-bubble typing-bubble"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div>
           <div class="chat-msg chat-agent chat-anim" style="--i:14"><div class="chat-bubble">🎤 Got it. I'll send you a voice message when a payment with "tip" in the description arrives.</div></div>
-          <div class="chat-msg chat-agent chat-anim" style="--i:15"><div class="chat-bubble" style="background:linear-gradient(135deg,#1a2744,#0f1729);border:1px solid var(--orange);box-shadow:0 0 20px rgba(247,147,26,.15)">⚡ <strong style="color:var(--orange)">Payment received!</strong><br>Amount: <strong>125 sats</strong><br>Description: <em>"Abrazo"</em></div></div>
+          <div class="chat-msg chat-agent chat-anim" style="--i:15"><div class="chat-bubble" style="background:#1a2e1a;border:1px solid #00a884;box-shadow:0 0 12px rgba(0,168,132,.15)">⚡ <strong style="color:#00a884">Payment received!</strong><br>Amount: <strong>125 sats</strong><br>Description: <em>"Abrazo"</em></div></div>
+        </div>
+        <div class="chat-input-bar">
+          <div class="chat-input-field" contenteditable="false">Type a message</div>
+          <div class="chat-send-btn"><svg viewBox="0 0 24 24"><path d="M1.101 21.757L23.8 12.028 1.101 2.3l.011 7.912 13.239 1.816-13.239 1.817-.011 7.912z"/></svg></div>
         </div>
       </div>
     </div>
@@ -358,33 +362,51 @@ footer .container{display:flex;flex-direction:column;align-items:center;gap:16px
   100%{transform:translateY(-87.5%)}
 }
 
-/* Chat window */
-.chat-container{max-width:580px;margin:48px auto 0}
-.chat-window{background:var(--bg);border:1px solid var(--border);border-radius:20px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.5)}
-.chat-header{display:flex;align-items:center;gap:12px;padding:16px 20px;background:var(--surface);border-bottom:1px solid var(--border)}
-.chat-avatar{width:40px;height:40px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;font-size:1.2rem}
-.chat-header-name{font-weight:700;font-size:.95rem}
-.chat-header-status{font-size:.75rem;color:var(--text2);display:flex;align-items:center;gap:6px}
-.status-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;animation:pulse-dot 2s infinite}
+/* WhatsApp-style Chat window */
+.chat-container{max-width:420px;margin:48px auto 0}
+.chat-window{background:#0b141a;border-radius:12px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.6)}
+
+/* Header — WhatsApp dark green */
+.chat-header{display:flex;align-items:center;gap:12px;padding:10px 16px;background:#1f2c34;border-bottom:1px solid #2a3942}
+.chat-avatar{width:36px;height:36px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;font-size:1rem}
+.chat-header-name{font-weight:600;font-size:.9rem;color:#e9edef}
+.chat-header-status{font-size:.72rem;color:#8696a0;display:flex;align-items:center;gap:5px}
+.status-dot{width:7px;height:7px;border-radius:50%;background:#00a884;display:inline-block;animation:pulse-dot 2s infinite}
 @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.4}}
 
-.chat-messages{padding:20px 16px;display:flex;flex-direction:column;gap:6px;max-height:700px;overflow-y:auto}
+/* Chat body — WhatsApp wallpaper pattern */
+.chat-messages{padding:16px 12px;display:flex;flex-direction:column;gap:4px;max-height:700px;overflow-y:auto;
+  background:#0b141a;
+  background-image:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
 
+/* Messages */
 .chat-msg{display:flex;max-width:85%}
 .chat-user{align-self:flex-end;justify-content:flex-end}
 .chat-agent,.chat-typing{align-self:flex-start}
 
-.chat-user .chat-bubble{background:var(--orange);color:#000;border-radius:18px 18px 4px 18px;padding:10px 16px;font-size:.88rem;font-weight:600;position:relative}
-.chat-agent .chat-bubble{background:var(--surface);border:1px solid var(--border);border-radius:4px 18px 18px 18px;padding:12px 16px;font-size:.85rem;color:var(--text2);line-height:1.6;position:relative}
-.chat-agent .chat-bubble strong{color:var(--orange)}
-.chat-agent .chat-bubble code,.chat-typing .chat-bubble code{font-family:var(--mono);font-size:.78rem;color:var(--cyan);background:var(--surface2);padding:2px 6px;border-radius:4px}
+/* User bubble — WhatsApp outgoing green */
+.chat-user .chat-bubble{background:#005c4b;color:#e9edef;border-radius:8px 8px 0 8px;padding:8px 12px;font-size:.85rem;font-weight:400;position:relative;box-shadow:0 1px 1px rgba(0,0,0,.2)}
+.chat-user .chat-bubble::after{content:'';position:absolute;bottom:0;right:-6px;width:0;height:0;border-left:6px solid #005c4b;border-bottom:6px solid transparent}
+
+/* Agent bubble — WhatsApp incoming dark */
+.chat-agent .chat-bubble{background:#1f2c34;color:#e9edef;border-radius:0 8px 8px 8px;padding:8px 12px;font-size:.85rem;line-height:1.5;position:relative;box-shadow:0 1px 1px rgba(0,0,0,.2)}
+.chat-agent .chat-bubble::after{content:'';position:absolute;top:0;left:-6px;width:0;height:0;border-right:6px solid #1f2c34;border-bottom:6px solid transparent}
+.chat-agent .chat-bubble strong{color:#53bdeb}
+.chat-agent .chat-bubble code,.chat-typing .chat-bubble code{font-family:var(--mono);font-size:.75rem;color:#53bdeb;background:#12222d;padding:2px 5px;border-radius:3px}
 
 /* Typing indicator */
-.chat-typing .chat-bubble{background:var(--surface);border:1px solid var(--border);border-radius:4px 18px 18px 18px;padding:12px 18px;display:flex;gap:5px;align-items:center}
-.typing-bubble .dot{width:7px;height:7px;border-radius:50%;background:var(--text2);animation:typingBounce 1.4s infinite ease-in-out}
+.chat-typing .chat-bubble{background:#1f2c34;border-radius:0 8px 8px 8px;padding:10px 16px;display:flex;gap:5px;align-items:center;box-shadow:0 1px 1px rgba(0,0,0,.2)}
+.typing-bubble .dot{width:6px;height:6px;border-radius:50%;background:#8696a0;animation:typingBounce 1.4s infinite ease-in-out}
 .typing-bubble .dot:nth-child(2){animation-delay:.2s}
 .typing-bubble .dot:nth-child(3){animation-delay:.4s}
-@keyframes typingBounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-6px);opacity:1}}
+@keyframes typingBounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
+
+/* Input bar */
+.chat-input-bar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#1f2c34;border-top:1px solid #2a3942}
+.chat-input-field{flex:1;background:#2a3942;border:none;border-radius:20px;padding:8px 16px;color:#e9edef;font-size:.82rem;font-family:var(--sans);outline:none}
+.chat-input-field::placeholder{color:#8696a0}
+.chat-send-btn{width:36px;height:36px;border-radius:50%;background:#00a884;border:none;display:flex;align-items:center;justify-content:center;cursor:default}
+.chat-send-btn svg{fill:#fff;width:18px;height:18px}
 
 /* Staggered chat animations */
 .chat-anim{opacity:0;transform:translateY(20px);transition:opacity .5s ease,transform .5s ease}
