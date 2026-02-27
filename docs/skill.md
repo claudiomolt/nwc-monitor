@@ -89,7 +89,13 @@ bash ~/.nwc-monitor/start.sh
 
 ## Configure
 
-Create `~/.nwc-monitor/config.yml` with the user's NWC connection string:
+Before creating the config, resolve the NWC connection string:
+
+1. **Check for alby-cli:** Look for `~/.alby-cli/connection-secret-*.key` files. If found, ask the user which wallet to use. Read the NWC string from that file.
+2. **Ask the user:** If no alby-cli, ask if they have an NWC connection string (from Alby Hub, LNbits, etc.).
+3. **Create one with lncurl:** If they don't have one, offer to create a disposable wallet using the `lncurl` skill. Warn: lncurl wallets cost ~1 sat/hour and die when balance hits 0.
+
+Once you have the NWC string, create `~/.nwc-monitor/config.yml`:
 
 ```yaml
 monitor:
@@ -120,9 +126,7 @@ Append to the wallet's `actions` list:
         template: "⚡ {amount_sats} sats — {description}"
 ```
 
-### No NWC string?
 
-If the user doesn't have one, create a wallet with the `lncurl` skill, or ask them for their Alby Hub / LNbits NWC connection string. Format: `nostr+walletconnect://PUBKEY?relay=wss://...&secret=SECRET`
 
 ## Start
 
