@@ -48,7 +48,7 @@ async function main(): Promise<void> {
   try {
     const { values } = parseArgs({
       options: {
-        config: { type: 'string', short: 'c', default: 'config/default.yml' },
+        config: { type: 'string', short: 'c' },
         verbose: { type: 'boolean', short: 'v', default: false },
         version: { type: 'boolean', short: 'V', default: false },
         help: { type: 'boolean', short: 'h', default: false },
@@ -70,9 +70,20 @@ async function main(): Promise<void> {
       logger.setLevel(LogLevel.DEBUG);
     }
 
-    const configPath = resolve(values.config || 'config/default.yml');
+    // Config resolution order:
+    // 1. --config flag (explicit path)
+    // 2. ~/.nwc-monitor/config.yml (user local config)
+    // 3. ./config/default.yml (repo example fallback)
+    const homeConfig = resolve(process.env.HOME || '~', '.nwc-monitor', 'config.yml');
+    const defaultConfig = resolve('config/default.yml');
+    const configPath = values.config
+      ? resolve(values.config)
+      : existsSync(homeConfig)
+        ? homeConfig
+        : defaultConfig;
+
     if (!existsSync(configPath)) {
-      logger.error(`Config file not found: ${configPath}`);
+      logger.error(`Config file not found. Create ~/.nwc-monitor/config.yml or use --config <path>`);
       process.exit(1);
     }
 

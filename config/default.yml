@@ -1,11 +1,12 @@
-# NWC Monitor — Production Config
+# NWC Monitor — Example Configuration
+# Copy this file to ~/.nwc-monitor/config.yml and edit with your values.
 
 monitor:
-  pollInterval: 60000
-  limit: 50
+  pollInterval: 60000             # Polling fallback interval in ms
+  limit: 50                       # Max payments per poll
 
 wallets:
-  - name: claudio
+  - name: my-wallet
     nwc: "nostr+walletconnect://PUBKEY?relay=wss://relay.example.com&secret=SECRET"
     actions:
       - type: console
@@ -14,10 +15,11 @@ wallets:
 
       - type: sqlite
         enabled: true
-        database: "./data/claudio.db"
+        database: "./data/payments.db"
 
-      - type: session_send
-        enabled: true
-        channel: whatsapp
-        target: "+1234567890"
-        template: "⚡ Pago recibido: {amount_sats} sats — {description}"
+      # Uncomment to get WhatsApp/Telegram notifications via OpenClaw:
+      # - type: session_send
+      #   enabled: true
+      #   channel: whatsapp
+      #   target: "+1234567890"
+      #   template: "⚡ Payment received: {amount_sats} sats — {description}"
