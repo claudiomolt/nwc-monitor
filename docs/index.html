@@ -216,7 +216,18 @@
   <script>
     function copyInstruction() {
       const text = 'Read https://nwc.claudio.solutions/skill.md and follow the instructions to install NWC Monitor.';
-      navigator.clipboard.writeText(text);
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text);
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
       const el = document.getElementById('copied');
       el.classList.add('show');
       setTimeout(() => el.classList.remove('show'), 1500);
