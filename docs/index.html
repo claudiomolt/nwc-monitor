@@ -291,7 +291,7 @@ footer .container{display:flex;flex-direction:column;align-items:center;gap:16px
     <div class="section-title fade-up" style="display:flex;flex-wrap:wrap;justify-content:center;gap:.35em;align-items:baseline">
       Give orders in plain
       <span class="lang-odometer" style="display:inline-block;height:1.15em;overflow:hidden;vertical-align:baseline;position:relative">
-        <span class="lang-track" style="display:flex;flex-direction:column;animation:langScroll 17.5s cubic-bezier(.45,.05,.55,.95) infinite">
+        <span class="lang-track" style="display:flex;flex-direction:column;animation:langScroll 8.75s cubic-bezier(.45,.05,.55,.95) infinite">
           <span class="lang-word">English</span>
           <span class="lang-word">Español</span>
           <span class="lang-word">Français</span>
@@ -315,28 +315,28 @@ footer .container{display:flex;flex-direction:column;align-items:center;gap:16px
           </div>
         </div>
         <div class="chat-messages">
-          <div class="chat-msg chat-user chat-anim" style="--i:0"><div class="chat-bubble">What's my balance?</div></div>
-          <div class="chat-msg chat-agent chat-anim" style="--i:1"><div class="chat-bubble">⚡ Your wallet has <strong>24,886 sats</strong> (~$25.40 USD)</div></div>
+          <div class="chat-msg chat-user chat-anim" style="--i:0"><div class="msg-avatar">👤</div><div class="chat-bubble">What's my balance?</div></div>
+          <div class="chat-msg chat-agent chat-anim" style="--i:1"><div class="msg-avatar">⚡</div><div class="chat-bubble">⚡ Your wallet has <strong>24,886 sats</strong> (~$25.40 USD)</div></div>
 
-          <div class="chat-msg chat-user chat-anim" style="--i:2"><div class="chat-bubble">Create an invoice for 5000 sats</div></div>
-          <div class="chat-msg chat-agent chat-anim" style="--i:3"><div class="chat-bubble">📄 Invoice created: <code>lnbc50u1pj...</code> Share this with the payer.</div></div>
+          <div class="chat-msg chat-user chat-anim" style="--i:2"><div class="msg-avatar">👤</div><div class="chat-bubble">Create an invoice for 5000 sats</div></div>
+          <div class="chat-msg chat-agent chat-anim" style="--i:3"><div class="msg-avatar">⚡</div><div class="chat-bubble">📄 Invoice created: <code>lnbc50u1pj...</code> Share this with the payer.</div></div>
 
-          <div class="chat-msg chat-user chat-anim" style="--i:4"><div class="chat-bubble">Send 100 sats to satoshi@walletofsatoshi.com</div></div>
-          <div class="chat-msg chat-agent chat-anim" style="--i:5"><div class="chat-bubble">💸 Sent 100 sats to satoshi@walletofsatoshi.com ✅</div></div>
+          <div class="chat-msg chat-user chat-anim" style="--i:4"><div class="msg-avatar">👤</div><div class="chat-bubble">Send 100 sats to satoshi@walletofsatoshi.com</div></div>
+          <div class="chat-msg chat-agent chat-anim" style="--i:5"><div class="msg-avatar">⚡</div><div class="chat-bubble">💸 Sent 100 sats to satoshi@walletofsatoshi.com ✅</div></div>
 
-          <div class="chat-msg chat-user chat-anim" style="--i:6"><div class="chat-bubble">Notify me on WhatsApp when I receive a payment</div></div>
-          <div class="chat-msg chat-agent chat-anim" style="--i:7"><div class="chat-bubble">✅ Done. I'll send you a WhatsApp message every time a payment arrives.</div></div>
+          <div class="chat-msg chat-user chat-anim" style="--i:6"><div class="msg-avatar">👤</div><div class="chat-bubble">Notify me on WhatsApp when I receive a payment</div></div>
+          <div class="chat-msg chat-agent chat-anim" style="--i:7"><div class="msg-avatar">⚡</div><div class="chat-bubble">✅ Done. I'll send you a WhatsApp message every time a payment arrives.</div></div>
 
-          <div class="chat-msg chat-user chat-anim" style="--i:8"><div class="chat-bubble">Send me an email when a payment over 1000 sats comes in</div></div>
-          <div class="chat-msg chat-agent chat-anim" style="--i:9"><div class="chat-bubble">📧 Configured. You'll get an email for any incoming payment above 1,000 sats.</div></div>
+          <div class="chat-msg chat-user chat-anim" style="--i:8"><div class="msg-avatar">👤</div><div class="chat-bubble">Send me an email when a payment over 1000 sats comes in</div></div>
+          <div class="chat-msg chat-agent chat-anim" style="--i:9"><div class="msg-avatar">⚡</div><div class="chat-bubble">📧 Configured. You'll get an email for any incoming payment above 1,000 sats.</div></div>
 
-          <div class="chat-msg chat-user chat-anim" style="--i:10"><div class="chat-bubble">Log to a file when a payment description contains "hello"</div></div>
-          <div class="chat-msg chat-agent chat-anim" style="--i:11"><div class="chat-bubble">📝 Set up. Payments with "hello" in the description will be appended to <code>~/.nwc-monitor/greetings.log</code></div></div>
+          <div class="chat-msg chat-user chat-anim" style="--i:10"><div class="msg-avatar">👤</div><div class="chat-bubble">Log to a file when a payment description contains "hello"</div></div>
+          <div class="chat-msg chat-agent chat-anim" style="--i:11"><div class="msg-avatar">⚡</div><div class="chat-bubble">📝 Set up. Payments with "hello" in the description will be appended to <code>~/.nwc-monitor/greetings.log</code></div></div>
 
-          <div class="chat-msg chat-user chat-anim" style="--i:12"><div class="chat-bubble">Send me a voice note when someone tips me</div></div>
-          <div class="chat-typing chat-anim" style="--i:13"><div class="chat-bubble typing-bubble"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div>
-          <div class="chat-msg chat-agent chat-anim" style="--i:14"><div class="chat-bubble">🎤 Got it. I'll send you a voice message when a payment with "tip" in the description arrives.</div></div>
-          <div class="chat-msg chat-agent chat-anim" style="--i:15"><div class="chat-bubble" style="background:#1a2e1a;border:1px solid #00a884;box-shadow:0 0 12px rgba(0,168,132,.15)">⚡ <strong style="color:#00a884">Payment received!</strong><br>Amount: <strong>125 sats</strong><br>Description: <em>"Abrazo"</em></div></div>
+          <div class="chat-msg chat-user chat-anim" style="--i:12"><div class="msg-avatar">👤</div><div class="chat-bubble">Send me a voice note when someone tips me</div></div>
+          <div class="chat-typing chat-anim" style="--i:13"><div class="msg-avatar">⚡</div><div class="chat-bubble typing-bubble"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div>
+          <div class="chat-msg chat-agent chat-anim" style="--i:14"><div class="msg-avatar">⚡</div><div class="chat-bubble">🎤 Got it. I'll send you a voice message when a payment with "tip" in the description arrives.</div></div>
+          <div class="chat-msg chat-agent chat-anim" style="--i:15"><div class="msg-avatar">⚡</div><div class="chat-bubble" style="background:#1a2e1a;border:1px solid #00a884;box-shadow:0 0 12px rgba(0,168,132,.15)">⚡ <strong style="color:#00a884">Payment received!</strong><br>Amount: <strong>125 sats</strong><br>Description: <em>"Abrazo"</em></div></div>
         </div>
         <div class="chat-input-bar">
           <div class="chat-input-field" contenteditable="false">Type a message</div>
@@ -375,14 +375,18 @@ footer .container{display:flex;flex-direction:column;align-items:center;gap:16px
 @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.4}}
 
 /* Chat body — WhatsApp wallpaper pattern */
-.chat-messages{padding:16px 12px;display:flex;flex-direction:column;gap:4px;max-height:700px;overflow-y:auto;
+.chat-messages{padding:16px 12px;display:flex;flex-direction:column;gap:4px;
   background:#0b141a;
   background-image:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
 
 /* Messages */
-.chat-msg{display:flex;max-width:85%}
-.chat-user{align-self:flex-end;justify-content:flex-end}
+.chat-msg{display:flex;max-width:85%;align-items:flex-end;gap:8px}
+.chat-user{align-self:flex-end;flex-direction:row-reverse}
 .chat-agent,.chat-typing{align-self:flex-start}
+.chat-user+.chat-agent,.chat-agent+.chat-user,.chat-typing+.chat-agent,.chat-typing+.chat-user,.chat-user+.chat-typing,.chat-agent+.chat-typing{margin-top:16px}
+.msg-avatar{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700}
+.chat-user .msg-avatar{background:#005c4b;color:#e9edef}
+.chat-agent .msg-avatar,.chat-typing .msg-avatar{background:var(--orange);color:#000}
 
 /* User bubble — WhatsApp outgoing green */
 .chat-user .chat-bubble{background:#005c4b;color:#e9edef;border-radius:8px 8px 0 8px;padding:8px 12px;font-size:.85rem;font-weight:400;position:relative;box-shadow:0 1px 1px rgba(0,0,0,.2)}
