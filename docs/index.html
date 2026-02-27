@@ -285,40 +285,113 @@ footer .container{display:flex;flex-direction:column;align-items:center;gap:16px
 <section class="cli-section" id="cli">
   <div class="container">
     <div class="section-label fade-up">Natural Language</div>
-    <div class="section-title fade-up">Give orders in plain English</div>
-    <p class="section-sub fade-up">No commands to memorize. Just tell your agent what you want.</p>
-    <div class="dialog-grid">
-      <div class="dialog-card fade-up">
-        <div class="dialog-you">What's my balance?</div>
-        <div class="dialog-agent">⚡ Your wallet has <strong>24,886 sats</strong> (~$25.40 USD)</div>
-      </div>
-      <div class="dialog-card fade-up">
-        <div class="dialog-you">Create an invoice for 5000 sats</div>
-        <div class="dialog-agent">📄 Invoice created: <code>lnbc50u1pj...</code><br>Share this with the payer.</div>
-      </div>
-      <div class="dialog-card fade-up">
-        <div class="dialog-you">Send 100 sats to satoshi@walletofsatoshi.com</div>
-        <div class="dialog-agent">💸 Sent 100 sats to satoshi@walletofsatoshi.com ✅</div>
-      </div>
-      <div class="dialog-card fade-up">
-        <div class="dialog-you">Notify me on WhatsApp when I receive a payment</div>
-        <div class="dialog-agent">✅ Done. I'll send you a WhatsApp message every time a payment arrives on your wallet.</div>
-      </div>
-      <div class="dialog-card fade-up">
-        <div class="dialog-you">Send me an email when a payment over 1000 sats comes in</div>
-        <div class="dialog-agent">📧 Configured. You'll get an email for any incoming payment above 1,000 sats.</div>
-      </div>
-      <div class="dialog-card fade-up">
-        <div class="dialog-you">Log to a file when a payment description contains "hello"</div>
-        <div class="dialog-agent">📝 Set up. Payments with "hello" in the description will be appended to <code>~/.nwc-monitor/greetings.log</code></div>
-      </div>
-      <div class="dialog-card fade-up">
-        <div class="dialog-you">Send me a voice note when someone tips me</div>
-        <div class="dialog-agent">🎤 Got it. I'll send you a voice message when a payment with "tip" in the description arrives.</div>
+    <div class="section-title fade-up" style="display:flex;flex-wrap:wrap;justify-content:center;gap:.35em;align-items:baseline">
+      Give orders in plain
+      <span class="lang-odometer" style="display:inline-block;height:1.15em;overflow:hidden;vertical-align:baseline;position:relative">
+        <span class="lang-track" style="display:flex;flex-direction:column;animation:langScroll 17.5s cubic-bezier(.45,.05,.55,.95) infinite">
+          <span class="lang-word">English</span>
+          <span class="lang-word">Español</span>
+          <span class="lang-word">Français</span>
+          <span class="lang-word">Italiano</span>
+          <span class="lang-word">Português</span>
+          <span class="lang-word">Deutsch</span>
+          <span class="lang-word">日本語</span>
+          <span class="lang-word">English</span>
+        </span>
+      </span>
+    </div>
+    <p class="section-sub fade-up" style="text-align:center">No commands to memorize. Just tell your agent what you want.</p>
+
+    <div class="chat-container fade-up">
+      <div class="chat-window">
+        <div class="chat-header">
+          <div class="chat-avatar">⚡</div>
+          <div class="chat-header-info">
+            <div class="chat-header-name">NWC Monitor</div>
+            <div class="chat-header-status"><span class="status-dot"></span> Online</div>
+          </div>
+        </div>
+        <div class="chat-messages">
+          <div class="chat-msg chat-user chat-anim" style="--i:0"><div class="chat-bubble">What's my balance?</div></div>
+          <div class="chat-msg chat-agent chat-anim" style="--i:1"><div class="chat-bubble">⚡ Your wallet has <strong>24,886 sats</strong> (~$25.40 USD)</div></div>
+
+          <div class="chat-msg chat-user chat-anim" style="--i:2"><div class="chat-bubble">Create an invoice for 5000 sats</div></div>
+          <div class="chat-msg chat-agent chat-anim" style="--i:3"><div class="chat-bubble">📄 Invoice created: <code>lnbc50u1pj...</code> Share this with the payer.</div></div>
+
+          <div class="chat-msg chat-user chat-anim" style="--i:4"><div class="chat-bubble">Send 100 sats to satoshi@walletofsatoshi.com</div></div>
+          <div class="chat-msg chat-agent chat-anim" style="--i:5"><div class="chat-bubble">💸 Sent 100 sats to satoshi@walletofsatoshi.com ✅</div></div>
+
+          <div class="chat-msg chat-user chat-anim" style="--i:6"><div class="chat-bubble">Notify me on WhatsApp when I receive a payment</div></div>
+          <div class="chat-msg chat-agent chat-anim" style="--i:7"><div class="chat-bubble">✅ Done. I'll send you a WhatsApp message every time a payment arrives.</div></div>
+
+          <div class="chat-msg chat-user chat-anim" style="--i:8"><div class="chat-bubble">Send me an email when a payment over 1000 sats comes in</div></div>
+          <div class="chat-msg chat-agent chat-anim" style="--i:9"><div class="chat-bubble">📧 Configured. You'll get an email for any incoming payment above 1,000 sats.</div></div>
+
+          <div class="chat-msg chat-user chat-anim" style="--i:10"><div class="chat-bubble">Log to a file when a payment description contains "hello"</div></div>
+          <div class="chat-msg chat-agent chat-anim" style="--i:11"><div class="chat-bubble">📝 Set up. Payments with "hello" in the description will be appended to <code>~/.nwc-monitor/greetings.log</code></div></div>
+
+          <div class="chat-msg chat-user chat-anim" style="--i:12"><div class="chat-bubble">Send me a voice note when someone tips me</div></div>
+          <div class="chat-typing chat-anim" style="--i:13"><div class="chat-bubble typing-bubble"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div>
+          <div class="chat-msg chat-agent chat-anim" style="--i:14"><div class="chat-bubble">🎤 Got it. I'll send you a voice message when a payment with "tip" in the description arrives.</div></div>
+        </div>
       </div>
     </div>
   </div>
 </section>
+
+<style>
+/* Language odometer */
+.lang-word{display:block;height:1.15em;line-height:1.15em;color:var(--orange);font-weight:900;white-space:nowrap}
+@keyframes langScroll{
+  0%,5%{transform:translateY(0)}
+  10.7%,16%{transform:translateY(-12.5%)}
+  21.4%,26.7%{transform:translateY(-25%)}
+  32.1%,37.4%{transform:translateY(-37.5%)}
+  42.8%,48.1%{transform:translateY(-50%)}
+  53.5%,58.8%{transform:translateY(-62.5%)}
+  64.2%,69.5%{transform:translateY(-75%)}
+  75%,95%{transform:translateY(-87.5%)}
+  100%{transform:translateY(-87.5%)}
+}
+
+/* Chat window */
+.chat-container{max-width:580px;margin:48px auto 0}
+.chat-window{background:var(--bg);border:1px solid var(--border);border-radius:20px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.5)}
+.chat-header{display:flex;align-items:center;gap:12px;padding:16px 20px;background:var(--surface);border-bottom:1px solid var(--border)}
+.chat-avatar{width:40px;height:40px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;font-size:1.2rem}
+.chat-header-name{font-weight:700;font-size:.95rem}
+.chat-header-status{font-size:.75rem;color:var(--text2);display:flex;align-items:center;gap:6px}
+.status-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;animation:pulse-dot 2s infinite}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.4}}
+
+.chat-messages{padding:20px 16px;display:flex;flex-direction:column;gap:6px;max-height:700px;overflow-y:auto}
+
+.chat-msg{display:flex;max-width:85%}
+.chat-user{align-self:flex-end;justify-content:flex-end}
+.chat-agent,.chat-typing{align-self:flex-start}
+
+.chat-user .chat-bubble{background:var(--orange);color:#000;border-radius:18px 18px 4px 18px;padding:10px 16px;font-size:.88rem;font-weight:600;position:relative}
+.chat-agent .chat-bubble{background:var(--surface);border:1px solid var(--border);border-radius:4px 18px 18px 18px;padding:12px 16px;font-size:.85rem;color:var(--text2);line-height:1.6;position:relative}
+.chat-agent .chat-bubble strong{color:var(--orange)}
+.chat-agent .chat-bubble code,.chat-typing .chat-bubble code{font-family:var(--mono);font-size:.78rem;color:var(--cyan);background:var(--surface2);padding:2px 6px;border-radius:4px}
+
+/* Typing indicator */
+.chat-typing .chat-bubble{background:var(--surface);border:1px solid var(--border);border-radius:4px 18px 18px 18px;padding:12px 18px;display:flex;gap:5px;align-items:center}
+.typing-bubble .dot{width:7px;height:7px;border-radius:50%;background:var(--text2);animation:typingBounce 1.4s infinite ease-in-out}
+.typing-bubble .dot:nth-child(2){animation-delay:.2s}
+.typing-bubble .dot:nth-child(3){animation-delay:.4s}
+@keyframes typingBounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-6px);opacity:1}}
+
+/* Staggered chat animations */
+.chat-anim{opacity:0;transform:translateY(20px);transition:opacity .5s ease,transform .5s ease}
+.chat-anim.visible{opacity:1;transform:translateY(0);transition-delay:calc(var(--i) * .25s)}
+
+@media(max-width:640px){
+  .chat-container{margin-top:32px}
+  .chat-msg{max-width:92%}
+  .section-title{justify-content:center}
+}
+</style>
 
 
 
@@ -360,7 +433,7 @@ function copyText(text) {
 const observer = new IntersectionObserver((entries) => {
   entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); }});
 }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
-document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+document.querySelectorAll('.fade-up,.chat-anim').forEach(el => observer.observe(el));
 </script>
 </body>
 </html>
