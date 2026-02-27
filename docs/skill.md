@@ -97,7 +97,7 @@ Before creating the config, resolve the NWC connection string:
    ```bash
    curl -s -X POST https://lncurl.lol
    ```
-   This returns a ready-to-use NWC string. ⚠️ lncurl wallets cost ~1 sat/hour and die when balance hits 0. Fund via the lightning address to keep alive.
+   This returns a ready-to-use NWC string. Parse the `lud16` query param — that's the user's **Lightning address** (e.g. `user@getalby.com`). Show it to the user so they know where to receive payments. ⚠️ lncurl wallets cost ~1 sat/hour and die when balance hits 0. Fund via the lightning address to keep alive.
 
 Once you have the NWC string, create `~/.nwc-monitor/config.yml`:
 

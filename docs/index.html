@@ -204,6 +204,16 @@
       </div>
     </div>
 
+    <div class="install-box">
+      <div class="section-label">No wallet? Create one instantly</div>
+      <p>Get a disposable Lightning wallet with one command:</p>
+      <div class="instruction" onclick="copyLncurl()">
+        <span class="copy-hint">click to copy</span>
+        <code>curl -s -X POST https://lncurl.lol</code>
+      </div>
+      <p style="margin-top:0.75rem;font-size:0.75rem;color:#666">Returns an NWC connection string with your Lightning address (<code>lud16</code> param). Costs ~1 sat/hour — fund it to keep it alive.</p>
+    </div>
+
     <div class="links">
       <a href="https://github.com/claudiomolt/nwc-monitor">GitHub</a>
       <a href="skill.md">skill.md</a>
@@ -214,8 +224,10 @@
   <div class="copied" id="copied">Copied ⚡</div>
 
   <script>
-    function copyInstruction() {
-      const text = 'Read https://nwc.claudio.solutions/skill.md and follow the instructions to install NWC Monitor.';
+    function copyLncurl() {
+      copyText('curl -s -X POST https://lncurl.lol');
+    }
+    function copyText(text) {
       if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(text);
       } else {
@@ -231,6 +243,9 @@
       const el = document.getElementById('copied');
       el.classList.add('show');
       setTimeout(() => el.classList.remove('show'), 1500);
+    }
+    function copyInstruction() {
+      copyText('Read https://nwc.claudio.solutions/skill.md and follow the instructions to install NWC Monitor.');
     }
   </script>
 </body>
