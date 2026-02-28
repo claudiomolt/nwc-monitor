@@ -236,7 +236,7 @@ footer .container{display:flex;flex-direction:column;align-items:center;gap:16px
     <p class="fade-up">NWC Monitor connects AI agents to the Bitcoin Lightning Network. Send sats, receive payments, trigger actions — all through a simple skill.</p>
 
     <!-- PRIMARY CTA -->
-    <div class="cta-box fade-up" id="cta">
+    <div class="cta-box fade-up" id="cta" data-parallax="0.03">
       <div class="cta-box-label" style="font-size:1.4rem;font-weight:800;letter-spacing:0.02em">🦞 Agent Instructions</div>
       <div class="cta-box-title">One line. That's all it takes.</div>
       <div class="cta-code-wrap" onclick="copyText('Read https://nwc.claudio.solutions/skill.md and follow the instructions to install NWC Monitor.')">
@@ -269,7 +269,7 @@ footer .container{display:flex;flex-direction:column;align-items:center;gap:16px
     </div>
     <p class="section-sub fade-up" style="text-align:center">No commands to memorize. Just tell your agent what you want.</p>
 
-    <div class="chat-container fade-up">
+    <div class="chat-container fade-scale" data-parallax="0.02">
       <div class="chat-window">
         <div class="chat-header">
           <div class="chat-avatar">⚡</div>
@@ -367,7 +367,7 @@ footer .container{display:flex;flex-direction:column;align-items:center;gap:16px
   <div class="container">
     <div class="section-label fade-up">How it works</div>
     <div class="section-title fade-up">Up and running in 3 steps</div>
-    <div class="steps-grid steps-3">
+    <div class="steps-grid steps-3 stagger">
 
       <!-- Step 1: Paste the line -->
       <div class="step-card fade-up">
@@ -437,7 +437,7 @@ footer .container{display:flex;flex-direction:column;align-items:center;gap:16px
     <div class="section-label fade-up">Features</div>
     <div class="section-title fade-up">Everything an agent needs<br>to operate on Lightning</div>
     <div class="section-sub fade-up">From basic balance checks to automated payment reactions — NWC Monitor is the complete Lightning toolkit for autonomous agents.</div>
-    <div class="features-grid">
+    <div class="features-grid stagger">
       <div class="feature-card feature-card--send fade-up">
         <div class="send-bg-symbol">@</div>
         <span class="feature-icon">⚡</span>
@@ -500,33 +500,148 @@ footer .container{display:flex;flex-direction:column;align-items:center;gap:16px
   </div>
 </footer>
 
+<!-- Particle canvas -->
+<canvas id="particles" style="position:fixed;inset:0;z-index:0;pointer-events:none"></canvas>
+
 <!-- Copied toast -->
 <div id="copied">✓ Copied to clipboard</div>
 
+<style>
+/* Parallax sections */
+[data-parallax]{transition:transform .1s linear}
+/* Enhanced fade variants */
+.fade-up{opacity:0;transform:translateY(40px);transition:all .8s cubic-bezier(.16,1,.3,1)}
+.fade-up.visible{opacity:1;transform:translateY(0)}
+.fade-left{opacity:0;transform:translateX(-40px);transition:all .8s cubic-bezier(.16,1,.3,1)}
+.fade-left.visible{opacity:1;transform:translateX(0)}
+.fade-right{opacity:0;transform:translateX(40px);transition:all .8s cubic-bezier(.16,1,.3,1)}
+.fade-right.visible{opacity:1;transform:translateX(0)}
+.fade-scale{opacity:0;transform:scale(.9);transition:all .8s cubic-bezier(.16,1,.3,1)}
+.fade-scale.visible{opacity:1;transform:scale(1)}
+/* Stagger children */
+.stagger .fade-up:nth-child(1),.stagger .fade-left:nth-child(1){transition-delay:.05s}
+.stagger .fade-up:nth-child(2),.stagger .fade-left:nth-child(2){transition-delay:.12s}
+.stagger .fade-up:nth-child(3),.stagger .fade-left:nth-child(3){transition-delay:.19s}
+.stagger .fade-up:nth-child(4),.stagger .fade-left:nth-child(4){transition-delay:.26s}
+.stagger .fade-up:nth-child(5),.stagger .fade-left:nth-child(5){transition-delay:.33s}
+.stagger .fade-up:nth-child(6){transition-delay:.4s}
+</style>
+
 <script>
+// === Copy ===
 function copyText(text) {
   if (navigator.clipboard && window.isSecureContext) {
     navigator.clipboard.writeText(text);
   } else {
     const ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.position = 'fixed';
-    ta.style.opacity = '0';
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
   }
   const el = document.getElementById('copied');
   el.classList.add('show');
   setTimeout(() => el.classList.remove('show'), 1500);
 }
 
-// Scroll animations
+// === Scroll Animations ===
 const observer = new IntersectionObserver((entries) => {
   entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); }});
-}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
-document.querySelectorAll('.fade-up,.chat-anim').forEach(el => observer.observe(el));
+}, { threshold: 0.08, rootMargin: '0px 0px -60px 0px' });
+document.querySelectorAll('.fade-up,.fade-left,.fade-right,.fade-scale,.chat-anim').forEach(el => observer.observe(el));
+
+// === Parallax on scroll ===
+let ticking = false;
+window.addEventListener('scroll', () => {
+  if (!ticking) {
+    requestAnimationFrame(() => {
+      const scrollY = window.scrollY;
+      document.querySelectorAll('[data-parallax]').forEach(el => {
+        const speed = parseFloat(el.dataset.parallax) || 0.05;
+        const rect = el.getBoundingClientRect();
+        const center = rect.top + rect.height / 2;
+        const offset = (window.innerHeight / 2 - center) * speed;
+        el.style.transform = `translateY(${offset}px)`;
+      });
+      ticking = false;
+    });
+    ticking = true;
+  }
+});
+
+// === Particle Canvas ===
+(function() {
+  const canvas = document.getElementById('particles');
+  const ctx = canvas.getContext('2d');
+  let w, h, particles, mouse = { x: -1000, y: -1000 };
+  const PARTICLE_COUNT = 80;
+  const CONNECT_DIST = 120;
+  const MOUSE_DIST = 150;
+
+  function resize() {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+  }
+
+  function init() {
+    resize();
+    particles = [];
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      particles.push({
+        x: Math.random() * w, y: Math.random() * h,
+        vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4,
+        r: Math.random() * 1.5 + 0.5,
+        o: Math.random() * 0.3 + 0.1
+      });
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, w, h);
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0) p.x = w; if (p.x > w) p.x = 0;
+      if (p.y < 0) p.y = h; if (p.y > h) p.y = 0;
+
+      // Mouse repulsion
+      const dx = p.x - mouse.x, dy = p.y - mouse.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < MOUSE_DIST) {
+        const force = (MOUSE_DIST - dist) / MOUSE_DIST * 0.02;
+        p.vx += dx * force; p.vy += dy * force;
+      }
+      // Dampen
+      p.vx *= 0.99; p.vy *= 0.99;
+
+      // Draw particle
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(247,147,26,${p.o})`;
+      ctx.fill();
+
+      // Connect nearby
+      for (let j = i + 1; j < particles.length; j++) {
+        const q = particles[j];
+        const ddx = p.x - q.x, ddy = p.y - q.y;
+        const d = Math.sqrt(ddx * ddx + ddy * ddy);
+        if (d < CONNECT_DIST) {
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y);
+          ctx.strokeStyle = `rgba(247,147,26,${0.06 * (1 - d / CONNECT_DIST)})`;
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', resize);
+  window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+  window.addEventListener('mouseleave', () => { mouse.x = -1000; mouse.y = -1000; });
+
+  init();
+  draw();
+})();
 </script>
 </body>
 </html>
