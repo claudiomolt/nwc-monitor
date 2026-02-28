@@ -107,6 +107,8 @@ nav .container{display:flex;align-items:center;justify-content:space-between;ove
 .feature-card h3{font-size:1.1rem;font-weight:700;margin-bottom:8px}
 .feature-card p{color:var(--text2);font-size:.92rem;line-height:1.6}
 .trigger-icons{display:flex;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);flex-wrap:wrap}
+.feature-card--send{position:relative;overflow:hidden;background:linear-gradient(135deg,var(--surface) 60%,rgba(247,147,26,.06) 100%)}
+.send-bg-symbol{position:absolute;right:-20px;bottom:-30px;font-size:11rem;font-weight:900;color:var(--orange);opacity:.06;line-height:1;pointer-events:none;font-family:var(--sans);user-select:none}
 
 /* ===== CLI ===== */
 .cli-section{padding:80px 0 100px}
@@ -423,7 +425,8 @@ footer .container{display:flex;flex-direction:column;align-items:center;gap:16px
     <div class="section-title fade-up">Everything an agent needs<br>to operate on Lightning</div>
     <div class="section-sub fade-up">From basic balance checks to automated payment reactions — NWC Monitor is the complete Lightning toolkit for autonomous agents.</div>
     <div class="features-grid">
-      <div class="feature-card fade-up">
+      <div class="feature-card feature-card--send fade-up">
+        <div class="send-bg-symbol">@</div>
         <span class="feature-icon">⚡</span>
         <h3>Send & Receive</h3>
         <p>Pay invoices, pay Lightning addresses, create invoices to receive. Full bidirectional Lightning capability.</p>
