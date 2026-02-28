@@ -109,6 +109,9 @@ nav .container{display:flex;align-items:center;justify-content:space-between;ove
 .trigger-icons{display:flex;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);flex-wrap:wrap}
 .feature-card--send{position:relative;overflow:hidden;background:linear-gradient(135deg,var(--surface) 60%,rgba(247,147,26,.06) 100%)}
 .send-bg-symbol{position:absolute;right:-20px;bottom:-30px;font-size:11rem;font-weight:900;color:var(--orange);opacity:.06;line-height:1;pointer-events:none;font-family:var(--sans);user-select:none}
+.feature-card--multi{position:relative;overflow:hidden;background:linear-gradient(135deg,var(--surface) 60%,rgba(6,182,212,.05) 100%)}
+.multi-bg-lines{position:absolute;top:10px;right:-10px;display:flex;flex-direction:column;gap:6px;pointer-events:none;user-select:none;opacity:.07;transform:rotate(-12deg);transform-origin:top right}
+.multi-bg-lines span{font-family:var(--mono);font-size:.85rem;font-weight:600;color:var(--cyan);white-space:nowrap}
 
 /* ===== CLI ===== */
 .cli-section{padding:80px 0 100px}
@@ -429,7 +432,7 @@ footer .container{display:flex;flex-direction:column;align-items:center;gap:16px
         <div class="send-bg-symbol">@</div>
         <span class="feature-icon">⚡</span>
         <h3>Send & Receive</h3>
-        <p>Pay invoices, pay Lightning addresses, create invoices to receive. Full bidirectional Lightning capability.</p>
+        <p>Pay invoices, pay <strong style="color:var(--orange)">Lightning addresses</strong>, create invoices to receive. Full bidirectional Lightning capability.</p>
       </div>
       <div class="feature-card fade-up">
         <span class="feature-icon">🎯</span>
@@ -444,7 +447,8 @@ footer .container{display:flex;flex-direction:column;align-items:center;gap:16px
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8899b4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         </div>
       </div>
-      <div class="feature-card fade-up">
+      <div class="feature-card feature-card--multi fade-up">
+        <div class="multi-bg-lines"><span>agent@lncurl.lol</span><span>satoshi@getalby.com</span><span>treasury@lacrypta.ar</span><span>dev@walletofsatoshi.com</span></div>
         <span class="feature-icon">🔑</span>
         <h3>Multi-Wallet Support</h3>
         <p>Manage multiple wallets simultaneously. Auto-detects Alby CLI wallets, accepts NWC strings, or creates disposable wallets instantly.</p>
