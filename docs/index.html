@@ -112,6 +112,16 @@ nav .container{display:flex;align-items:center;justify-content:space-between;ove
 .feature-card--multi{position:relative;overflow:hidden;background:linear-gradient(135deg,var(--surface) 60%,rgba(6,182,212,.05) 100%)}
 .multi-bg-lines{position:absolute;top:10px;right:-10px;display:flex;flex-direction:column;gap:6px;pointer-events:none;user-select:none;opacity:.07;transform:rotate(-12deg);transform-origin:top right}
 .multi-bg-lines span{font-family:var(--mono);font-size:.85rem;font-weight:600;color:var(--cyan);white-space:nowrap}
+.tested-models{display:flex;gap:6px;margin-top:14px;flex-wrap:wrap}
+.model-badge{font-family:var(--mono);font-size:.7rem;font-weight:600;padding:4px 10px;border-radius:6px;border:1px solid var(--border)}
+.model-anthropic{color:#d4a574;border-color:#d4a57444;background:#d4a57411}
+.model-openai{color:#74d4a5;border-color:#74d4a544;background:#74d4a511}
+.feature-card--service{position:relative;overflow:hidden}
+.service-bg{position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:4px;pointer-events:none;user-select:none;opacity:.1}
+.service-line{font-family:var(--mono);font-size:.65rem;color:var(--text);display:flex;align-items:center;gap:5px;white-space:nowrap}
+.service-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.service-dot--green{background:#27c93f}
+.service-status{color:var(--orange);margin-left:auto}
 
 /* ===== CLI ===== */
 .cli-section{padding:80px 0 100px}
@@ -457,11 +467,21 @@ footer .container{display:flex;flex-direction:column;align-items:center;gap:16px
         <span class="feature-icon">🧠</span>
         <h3>Smart Setup</h3>
         <p>Zero-config for Alby users. Paste an NWC string for any wallet. Or create one in one command with lncurl. Works for beginners and power users.</p>
+        <div class="tested-models">
+          <span class="model-badge model-anthropic">Opus 4.6</span>
+          <span class="model-badge model-anthropic">Sonnet 4.5</span>
+          <span class="model-badge model-openai">GPT 5.2</span>
+        </div>
       </div>
-      <div class="feature-card fade-up">
+      <div class="feature-card feature-card--service fade-up">
+        <div class="service-bg">
+          <div class="service-line"><span class="service-dot service-dot--green"></span> relay.damus.io <span class="service-status">connected</span></div>
+          <div class="service-line"><span class="service-dot service-dot--green"></span> 24/7 uptime <span class="service-status">auto-boot</span></div>
+          <div class="service-line"><span class="service-dot service-dot--green"></span> auto-restart <span class="service-status">enabled</span></div>
+        </div>
         <span class="feature-icon">🛡️</span>
         <h3>Runs as a Service</h3>
-        <p>Installs as a systemd service for reliable, persistent monitoring. Falls back to nohup if systemd isn't available.</p>
+        <p>Installs as a systemd service with auto-restart and boot persistence. Always connected, always monitoring. Falls back to nohup if systemd isn't available.</p>
       </div>
       <div class="feature-card fade-up">
         <span class="feature-icon">🤖</span>
