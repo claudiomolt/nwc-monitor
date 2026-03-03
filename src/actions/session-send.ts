@@ -23,12 +23,28 @@ export class SessionSendAction extends BaseAction {
     }
   }
 
+  private async resolveOpenclaw(): Promise<string> {
+    const candidates = [
+      '/home/linuxbrew/.linuxbrew/bin/openclaw',
+      '/home/agustin/.npm-global/bin/openclaw',
+    ];
+    for (const path of candidates) {
+      try {
+        const file = Bun.file(path);
+        if (await file.exists()) return path;
+      } catch { /* skip */ }
+    }
+    return 'openclaw'; // fallback to PATH
+  }
+
   async execute(payment: Payment): Promise<ActionResult> {
     const message = this.replaceTemplates(this.template, payment);
 
     try {
+      // Resolve openclaw binary — prefer linuxbrew (latest), fallback to PATH
+      const openclawBin = await this.resolveOpenclaw();
       const proc = Bun.spawn(
-        ['openclaw', 'message', 'send', '--channel', this.channel, '--target', this.target, '--message', message],
+        [openclawBin, 'message', 'send', '--channel', this.channel, '--target', this.target, '--message', message],
         { stdout: 'pipe', stderr: 'pipe', timeout: 15000 }
       );
 
